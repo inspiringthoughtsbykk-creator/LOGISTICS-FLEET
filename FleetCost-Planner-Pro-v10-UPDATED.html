@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FleetCost Planner Pro - Advanced with Fuel Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .fuel-price-banner {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .fuel-price-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .fuel-price-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .fuel-price-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .fuel-edit-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .fuel-edit-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
+        .step-indicator::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 20%;
+            height: 2px;
+            background: #667eea;
+            z-index: 1;
+            transition: width 0.3s ease;
+        }
+
+        .step-indicator.step-2::after { width: 40%; }
+        .step-indicator.step-3::after { width: 60%; }
+        .step-indicator.step-4::after { width: 80%; }
+        .step-indicator.step-5::after { width: 100%; }
+
+        .step {
+            width: 20%;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        .form-section {
+            margin-bottom: 35px;
+        }
+
+        .form-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .help-text {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .summary-box h4 {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .summary-box p {
+            line-height: 1.8;
+            opacity: 0.95;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #1565c0;
+            font-size: 0.95em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.8em;
+        }
+
+        .category-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            color: #333;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .category-btn:hover {
+            border-color: #667eea;
+        }
+
+        .vehicle-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .add-custom-btn {
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-custom-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .vehicle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .vehicle-card {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .vehicle-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .vehicle-card.selected {
+            background: #f0f4ff;
+            border-color: #667eea;
+            border-width: 3px;
+        }
+
+        .vehicle-card.custom {
+            border: 2px dashed #4caf50;
+            background: #f1f8f4;
+        }
+
+        .vehicle-card h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .vehicle-card-label {
+            font-size: 0.75em;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .vehicle-card-label.custom {
+            background: #4caf50;
+        }
+
+        .vehicle-specs {
+            font-size: 0.85em;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .vehicle-specs p {
+            margin: 2px 0;
+        }
+
+        .vehicle-specs strong {
+            color: #333;
+        }
+
+        .vehicle-card .edit-btn,
+        .vehicle-card .delete-btn {
+            width: 48%;
+            padding: 6px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .vehicle-card .edit-btn {
+            background: #667eea;
+            color: white;
+            margin-right: 4%;
+        }
+
+        .vehicle-card .edit-btn:hover {
+            background: #764ba2;
+        }
+
+        .vehicle-card .delete-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .vehicle-card .delete-btn:hover {
+            background: #da190b;
+        }
+
+        .trip-summary-display {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .trip-summary-display strong {
+            color: #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .modal-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .modal-form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .modal-form-group input,
+        .modal-form-group select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .modal-form-group input:focus,
+        .modal-form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .cost-breakdown {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .cost-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .cost-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .cost-section-title {
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.05em;
+            padding: 10px 0;
+            border-left: 4px solid #667eea;
+            padding-left: 12px;
+        }
+
+        .cost-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+            gap: 20px;
+        }
+
+        .cost-row:last-of-type {
+            border-bottom: none;
+        }
+
+        .cost-row-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+            flex: 1;
+        }
+
+        .cost-row-value {
+            color: #667eea;
+            font-weight: 700;
+            text-align: right;
+            font-size: 0.95em;
+            min-width: 120px;
+        }
+
+        .cost-row.total {
+            background: #f0f4ff;
+            padding: 15px 12px;
+            border-radius: 6px;
+            border-top: 2px solid #667eea;
+            border-bottom: 2px solid #667eea;
+            font-size: 1.05em;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .cost-row.total .cost-row-value {
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .success-message {
+            background: #c8e6c9;
+            border-left: 4px solid #4caf50;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .fuel-calculation-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #e65100;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid, .modal-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .vehicle-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cost-row {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .fuel-price-banner {
+                grid-template-columns: 1fr;
+            }
+
+            .vehicle-card .edit-btn,
+            .vehicle-card .delete-btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚚 FleetCost Planner Pro</h1>
+            <p>Advanced Fleet Management with Real-Time Fuel Pricing</p>
+        </header>
+
+        <!-- FUEL PRICE BANNER -->
+        <div class="fuel-price-banner">
+            <div class="fuel-price-item">
+                <span class="fuel-price-label">⛽ Diesel Price</span>
+                <span class="fuel-price-value" id="dieselPriceDisplay">₹87.67/L</span>
+                <button class="fuel-edit-btn" onclick="openFuelPriceModal()">Edit</button>
+            </div>
+            <div class="fuel-price-item">
+                <span class="fuel-price-label">⛽ Petrol Price</span>
+                <span class="fuel-price-value" id="petrolPriceDisplay">₹94.77/L</span>
+                <button class="fuel-edit-btn" onclick="openFuelPriceModal()">Edit</button>
+            </div>
+            <div class="fuel-price-item">
+                <span class="fuel-price-label">⛽ CNG Price</span>
+                <span class="fuel-price-value" id="cngPriceDisplay">₹77.09/Kg</span>
+                <button class="fuel-edit-btn" onclick="openFuelPriceModal()">Edit</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="step-indicator" id="stepIndicator">
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Trip Planning</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Fleet Selection</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Cost Analysis</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Comparison</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-label">Reports</div>
+                </div>
+            </div>
+
+            <!-- STEP 1: TRIP PLANNING -->
+            <div id="step1" class="step-content">
+                <h2>📍 Step 1: Trip Planning</h2>
+
+                <div class="info-box">
+                    ℹ️ Enter your trip details. Distance and travel days will automatically populate based on our route database.
+                </div>
+
+                <div class="form-section">
+                    <h3>📌 Trip Details</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="originInput">Origin City *</label>
+                            <input type="text" id="originInput" placeholder="e.g., Alwar, Chennai" onkeyup="handleOriginInput()" autocomplete="off">
+                            <div class="suggestions-dropdown" id="originSuggestions"></div>
+                            <div class="help-text">Type to search</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="destinationInput">Destination City *</label>
+                            <input type="text" id="destinationInput" placeholder="e.g., Chennai, Lucknow" onkeyup="handleDestinationInput()" autocomplete="off">
+                            <div class="suggestions-dropdown" id="destinationSuggestions"></div>
+                            <div class="help-text">Type to search</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📊 Route Parameters</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="distanceInput">Distance (km)</label>
+                            <input type="number" id="distanceInput" placeholder="Auto-filled" disabled readonly style="background: #f0f4ff; border-color: #667eea;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="travelDaysInput">Travel Days</label>
+                            <input type="number" id="travelDaysInput" placeholder="Auto-filled" disabled readonly style="background: #f0f4ff; border-color: #667eea;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-box">
+                    <h4>📋 Trip Summary</h4>
+                    <p id="tripSummary">Enter origin and destination...</p>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
+                    <button class="btn btn-primary" id="nextBtn1" onclick="proceedToFleetSelection()" disabled>Next →</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: FLEET SELECTION -->
+            <div id="step2" class="step-content hidden">
+                <h2>🚛 Step 2: Fleet Selection & Toll Cost</h2>
+
+                <div class="info-box">
+                    ℹ️ Select from 51+ vehicles across 8 categories or create a custom vehicle. Enter toll cost for your route.
+                </div>
+
+                <div class="trip-summary-display">
+                    <strong>📍 Current Trip:</strong> <span id="tripDisplaySummary"></span>
+                </div>
+
+                <div class="form-section">
+                    <h3>💰 Toll Cost (₹)</h3>
+                    <input type="number" id="tollCostInput" placeholder="Auto-filled from verified route database" min="0" value="0" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 0.95em; background: #f0f4ff; border-color: #667eea;" readonly>
+                    <div class="help-text">Toll cost is auto-populated from verified route database. Enable manual entry if needed.</div>
+                </div>
+
+                <div class="form-section">
+                    <div class="vehicle-section-header">
+                        <h3 style="margin: 0;">🏷️ Vehicle Category Filter</h3>
+                    </div>
+                    <div class="category-filter" id="categoryFilter"></div>
+                </div>
+
+                <div class="form-section">
+                    <div class="vehicle-section-header">
+                        <h3 style="margin: 0;">🚗 Available Vehicles (<span id="vehicleCount">0</span> matching)</h3>
+                        <button class="add-custom-btn" onclick="openCustomVehicleModal()">+ Add Custom Vehicle</button>
+                    </div>
+                    <div class="vehicle-grid" id="vehicleGrid"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goBackToStep1()">← Back</button>
+                    <button class="btn btn-primary" id="nextBtn2" onclick="proceedToStep3()" disabled>Next →</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: COST ANALYSIS -->
+            <div id="step3" class="step-content hidden">
+                <h2>💰 Step 3: Cost Analysis with Detailed Fuel Breakdown</h2>
+
+                <div class="info-box">
+                    ℹ️ Detailed cost breakdown including precise fuel calculations based on mileage and current fuel prices.
+                </div>
+
+                <div class="trip-summary-display">
+                    <strong>📍 Trip:</strong> <span id="tripCostSummary"></span>
+                    <br>
+                    <strong>🚛 Vehicle:</strong> <span id="vehicleCostSummary"></span>
+                    <br>
+                    <strong>⛽ Fuel Type:</strong> <span id="fuelTypeSummary">Diesel</span> | <strong>Mileage:</strong> <span id="mileageSummary">0</span> km/L | <strong>Fuel Price:</strong> ₹<span id="fuelPriceSummary">0</span>/L
+                    <br>
+                    <strong>💵 Toll Cost:</strong> ₹<span id="tollDisplaySummary">0</span>
+                </div>
+
+                <div class="fuel-calculation-box">
+                    <strong>⚙️ Fuel Calculation Formula:</strong><br>
+                    Fuel Required = Distance ÷ Mileage | Fuel Cost/km = Fuel Price ÷ Mileage | Total Fuel Cost = Fuel Required × Fuel Price
+                </div>
+
+                <div class="form-section">
+                    <h3>📊 Cost Breakdown</h3>
+                    <div class="cost-breakdown" id="costBreakdown"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goBackToStep2()">← Back</button>
+                    <button class="btn btn-primary" onclick="proceedToStep4()">Next: Comparison →</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: COMPARISON -->
+            <div id="step4" class="step-content hidden">
+                <h2>📊 Step 4: Fleet Comparison</h2>
+
+                <div class="info-box">
+                    ℹ️ Click on vehicle cards to select multiple vehicles (min 2). Selected vehicles show orange borders. Generate comparison table to analyze all metrics side-by-side.
+                </div>
+
+                <div id="comparisonVehicleSelector" style="margin: 20px 0;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">🚗 Select Vehicles to Compare (Selected: <span id="selectedCount">0</span>/51+)</h3>
+                    <div class="vehicle-grid" id="comparisonVehicleGrid"></div>
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="clearComparisonSelection()">Clear Selection</button>
+                        <button class="btn btn-primary" onclick="generateComparisonTable()" style="width: auto;">📊 Generate Comparison</button>
+                    </div>
+                </div>
+
+                <div id="comparisonContent" style="margin: 20px 0;">
+                    <div id="comparisonMessage" style="display:none;"></div>
+                    <div id="comparisonTable" style="overflow-x: auto; display:none;"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goBackToStep3()">← Back</button>
+                    <button class="btn btn-primary" id="proceedToReportsBtn" onclick="proceedToStep5()" disabled>Next: Reports →</button>
+                </div>
+            </div>
+
+            <!-- STEP 5: REPORTS -->
+            <div id="step5" class="step-content hidden">
+                <h2>📄 Step 5: Reports & Export</h2>
+
+                <div class="info-box">
+                    ℹ️ Generate and export detailed reports of your fleet analysis with complete fuel cost breakdown.
+                </div>
+
+                <div id="reportContent" style="margin: 20px 0;">
+                    <div class="success-message" id="reportMessage"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goBackToStep4()">← Back</button>
+                    <button class="btn btn-primary" onclick="downloadReportTXT()">📥 Download TXT Report</button>
+                    <button class="btn btn-primary" onclick="downloadReportExcel()">📊 Download Excel Report</button>
+                    <button class="btn btn-primary" onclick="downloadReportPDF()">📄 Download PDF Report</button>
+                    <button class="btn btn-primary" onclick="resetToStart()">🔄 Start New Analysis</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FUEL PRICE MODAL -->
+    <div id="fuelPriceModal" class="modal">
+        <div class="modal-content">
+            <h3>⛽ Update Fuel Prices</h3>
+            <div class="modal-form-grid">
+                <div class="modal-form-group">
+                    <label>Diesel Price (₹/L)</label>
+                    <input type="number" id="edit_diesel" step="0.01" value="87.67">
+                </div>
+                <div class="modal-form-group">
+                    <label>Petrol Price (₹/L)</label>
+                    <input type="number" id="edit_petrol" step="0.01" value="94.77">
+                </div>
+                <div class="modal-form-group">
+                    <label>CNG Price (₹/Kg)</label>
+                    <input type="number" id="edit_cng" step="0.01" value="77.09">
+                </div>
+            </div>
+            <div class="help-text" style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 6px;">
+                💡 Current prices are updated as of Dec 10, 2025. Update these values to match your local market rates.
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeFuelPriceModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveFuelPrices()">Update Prices</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT/CREATE CUSTOM VEHICLE MODAL -->
+    <div id="vehicleModal" class="modal">
+        <div class="modal-content">
+            <h3 id="vehicleModalTitle">✏️ Add Custom Vehicle</h3>
+            <div class="modal-form-grid" id="vehicleFormGrid"></div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeVehicleModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveVehicle()">Save Vehicle</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fuel prices (updated as of Dec 10, 2025)
+        let fuelPrices = {
+            diesel: 87.67,
+            petrol: 94.77,
+            cng: 77.09
+        };
+
+        // Trip Master Data
+        const tripMaster = [
+            {route: "Alwar-Chennai", origin: "Alwar", destination: "Chennai", distance_km: 2107, travel_days: 5, toll_cost: 7185},
+            {route: "Alwar-Lucknow", origin: "Alwar", destination: "Lucknow", distance_km: 499, travel_days: 1, toll_cost: 590},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 560},
+            {route: "Alwar-Pantnagar", origin: "Alwar", destination: "Pantnagar", distance_km: 425, travel_days: 1, toll_cost: 1960},
+            {route: "Chennai-Hosur", origin: "Chennai", destination: "Hosur", distance_km: 323, travel_days: 1, toll_cost: 1930},
+            {route: "Alwar-Vijayawada", origin: "Alwar", destination: "Vijayawada", distance_km: 1745, travel_days: 4, toll_cost: 4360},
+            {route: "Alwar-Chennai", origin: "Alwar", destination: "Chennai", distance_km: 2107, travel_days: 5, toll_cost: 6465},
+            {route: "Bangalore-Chennai", origin: "Bangalore", destination: "Chennai", distance_km: 309, travel_days: 1, toll_cost: 2185},
+            {route: "Bangalore-Pantnagar", origin: "Bangalore", destination: "Pantnagar", distance_km: 2226, travel_days: 5, toll_cost: 8985},
+            {route: "Alwar-Chennai", origin: "Alwar", destination: "Chennai", distance_km: 2107, travel_days: 5, toll_cost: 6465},
+            {route: "Chennai-Hosur", origin: "Chennai", destination: "Hosur", distance_km: 323, travel_days: 1, toll_cost: 1930},
+            {route: "Chennai-Jabalpur", origin: "Chennai", destination: "Jabalpur", distance_km: 1400, travel_days: 3, toll_cost: 6510},
+            {route: "Alwar-Hosur", origin: "Alwar", destination: "Hosur", distance_km: 2114, travel_days: 5, toll_cost: 4115},
+            {route: "Alwar-Hosur", origin: "Alwar", destination: "Hosur", distance_km: 2114, travel_days: 5, toll_cost: 4115},
+            {route: "Alwar-Lucknow", origin: "Alwar", destination: "Lucknow", distance_km: 499, travel_days: 1, toll_cost: 385},
+            {route: "Alwar-Lucknow", origin: "Alwar", destination: "Lucknow", distance_km: 499, travel_days: 1, toll_cost: 385},
+            {route: "Alwar-Lucknow", origin: "Alwar", destination: "Lucknow", distance_km: 499, travel_days: 1, toll_cost: 385},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 560},
+            {route: "Hosur-Alwar", origin: "Hosur", destination: "Alwar", distance_km: 2106, travel_days: 5, toll_cost: 11330},
+            {route: "Alwar-Pantnagar", origin: "Alwar", destination: "Pantnagar", distance_km: 425, travel_days: 1, toll_cost: 1610},
+            {route: "Alwar-Lucknow", origin: "Alwar", destination: "Lucknow", distance_km: 499, travel_days: 1, toll_cost: 190},
+            {route: "Alwar-Pantnagar", origin: "Alwar", destination: "Pantnagar", distance_km: 425, travel_days: 1, toll_cost: 1610},
+            {route: "Alwar-Vijayawada", origin: "Alwar", destination: "Vijayawada", distance_km: 1745, travel_days: 4, toll_cost: 3350},
+            {route: "Sriperumpudur-Ennore", origin: "Sriperumpudur", destination: "Ennore", distance_km: 66, travel_days: 1, toll_cost: 615},
+            {route: "Chennai-Lucknow", origin: "Chennai", destination: "Lucknow", distance_km: 1848, travel_days: 5, toll_cost: 7588},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+            {route: "Bangalore-Alwar", origin: "Bangalore", destination: "Alwar", distance_km: 2106, travel_days: 5, toll_cost: 4370},
+            {route: "Bhandara-Chennai", origin: "Bhandara", destination: "Chennai", distance_km: 1182, travel_days: 3, toll_cost: 1725},
+            {route: "Bhandara-Chennai", origin: "Bhandara", destination: "Chennai", distance_km: 1182, travel_days: 3, toll_cost: 1725},
+            {route: "Hosur-Chennai", origin: "Hosur", destination: "Chennai", distance_km: 309, travel_days: 1, toll_cost: 3860},
+            {route: "Hosur-Chennai", origin: "Hosur", destination: "Chennai", distance_km: 309, travel_days: 1, toll_cost: 3860},
+            {route: "Alwar-Hosur", origin: "Alwar", destination: "Hosur", distance_km: 2114, travel_days: 5, toll_cost: 5825},
+            {route: "Bhandara-Coimbatore", origin: "Bhandara", destination: "Coimbatore", distance_km: 1514, travel_days: 3, toll_cost: 4975},
+            {route: "Bhandara-Pantnagar", origin: "Bhandara", destination: "Pantnagar", distance_km: 1109, travel_days: 3, toll_cost: 2080},
+            {route: "Hosur-Hosur", origin: "Hosur", destination: "Hosur", distance_km: 14, travel_days: 1, toll_cost: 0},
+            {route: "Hosur-Jabalpur", origin: "Hosur", destination: "Jabalpur", distance_km: 1407, travel_days: 3, toll_cost: 6415},
+            {route: "Hosur-Lucknow", origin: "Hosur", destination: "Lucknow", distance_km: 1888, travel_days: 5, toll_cost: 8870},
+            {route: "Chennai-Alwar", origin: "Chennai", destination: "Alwar", distance_km: 2099, travel_days: 5, toll_cost: 8810},
+            {route: "Chennai-Alwar", origin: "Chennai", destination: "Alwar", distance_km: 2099, travel_days: 5, toll_cost: 8810},
+            {route: "Chennai-Alwar", origin: "Chennai", destination: "Alwar", distance_km: 2099, travel_days: 5, toll_cost: 8810},
+            {route: "Bhandara-Pantnagar", origin: "Bhandara", destination: "Pantnagar", distance_km: 1109, travel_days: 3, toll_cost: 2250},
+            {route: "Hosur-Pantnagar", origin: "Hosur", destination: "Pantnagar", distance_km: 2225, travel_days: 5, toll_cost: 10630},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 560},
+            {route: "Alwar-Lucknow", origin: "Alwar", destination: "Lucknow", distance_km: 499, travel_days: 1, toll_cost: 590},
+            {route: "Chennai-Hosur", origin: "Chennai", destination: "Hosur", distance_km: 323, travel_days: 1, toll_cost: 1930},
+            {route: "Hosur-Chennai", origin: "Hosur", destination: "Chennai", distance_km: 309, travel_days: 1, toll_cost: 3860},
+            {route: "Chennai-Bhandara", origin: "Chennai", destination: "Bhandara", distance_km: 1186, travel_days: 3, toll_cost: 1725},
+            {route: "Chennai-Lucknow", origin: "Chennai", destination: "Lucknow", distance_km: 1848, travel_days: 5, toll_cost: 7588},
+            {route: "Pantnagar-Alwar", origin: "Pantnagar", destination: "Alwar", distance_km: 415, travel_days: 1, toll_cost: 1960},
+            {route: "Chennai-Hosur", origin: "Chennai", destination: "Hosur", distance_km: 323, travel_days: 1, toll_cost: 1330},
+            {route: "Chennai-Lucknow", origin: "Chennai", destination: "Lucknow", distance_km: 1848, travel_days: 5, toll_cost: 7588},
+            {route: "Chennai-Hosur", origin: "Chennai", destination: "Hosur", distance_km: 323, travel_days: 1, toll_cost: 1330},
+            {route: "Chennai-Hosur", origin: "Chennai", destination: "Hosur", distance_km: 323, travel_days: 1, toll_cost: 1330},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+            {route: "Chennai-Jabalpur", origin: "Chennai", destination: "Jabalpur", distance_km: 1400, travel_days: 3, toll_cost: 5735},
+            {route: "Chennai-Hosur", origin: "Chennai", destination: "Hosur", distance_km: 323, travel_days: 1, toll_cost: 1930},
+            {route: "Chennai-Lucknow", origin: "Chennai", destination: "Lucknow", distance_km: 1848, travel_days: 5, toll_cost: 6828},
+            {route: "Chennai-Lucknow", origin: "Chennai", destination: "Lucknow", distance_km: 1848, travel_days: 5, toll_cost: 6828},
+            {route: "Chennai-Lucknow", origin: "Chennai", destination: "Lucknow", distance_km: 1848, travel_days: 5, toll_cost: 6828},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 170},
+            {route: "Lucknow-Pantnagar", origin: "Lucknow", destination: "Pantnagar", distance_km: 341, travel_days: 1, toll_cost: 170},
+            {route: "Alwar-Lucknow", origin: "Alwar", destination: "Lucknow", distance_km: 499, travel_days: 1, toll_cost: 590},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8010},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8010},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8010},
+            {route: "Chennai-Vijayawada", origin: "Chennai", destination: "Vijayawada", distance_km: 510, travel_days: 1, toll_cost: 2685},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+            {route: "Hosur-Alwar", origin: "Hosur", destination: "Alwar", distance_km: 2106, travel_days: 5, toll_cost: 9445},
+            {route: "Hosur-Alwar", origin: "Hosur", destination: "Alwar", distance_km: 2106, travel_days: 5, toll_cost: 9445},
+            {route: "Alwar-Vijayawada", origin: "Alwar", destination: "Vijayawada", distance_km: 1745, travel_days: 4, toll_cost: 1850},
+            {route: "Hosur-Chennai", origin: "Hosur", destination: "Chennai", distance_km: 309, travel_days: 1, toll_cost: 2660},
+            {route: "Hosur-Chennai", origin: "Hosur", destination: "Chennai", distance_km: 309, travel_days: 1, toll_cost: 2660},
+            {route: "Hosur-Hosur", origin: "Hosur", destination: "Hosur", distance_km: 14, travel_days: 1, toll_cost: 0},
+            {route: "Hosur-Jabalpur", origin: "Hosur", destination: "Jabalpur", distance_km: 1407, travel_days: 3, toll_cost: 5110},
+            {route: "Pantnagar-Chennai", origin: "Pantnagar", destination: "Chennai", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+            {route: "Hosur-Lucknow", origin: "Hosur", destination: "Lucknow", distance_km: 1888, travel_days: 5, toll_cost: 7365},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 170},
+            {route: "Hosur-Lucknow", origin: "Hosur", destination: "Lucknow", distance_km: 1888, travel_days: 5, toll_cost: 7365},
+            {route: "Hosur-Lucknow", origin: "Hosur", destination: "Lucknow", distance_km: 1888, travel_days: 5, toll_cost: 7365},
+            {route: "Pantnagar-Alwar", origin: "Pantnagar", destination: "Alwar", distance_km: 415, travel_days: 1, toll_cost: 1960},
+            {route: "Hosur-Alwar", origin: "Hosur", destination: "Alwar", distance_km: 2106, travel_days: 5, toll_cost: 11330},
+            {route: "Hosur-Pantnagar", origin: "Hosur", destination: "Pantnagar", distance_km: 2225, travel_days: 5, toll_cost: 8835},
+            {route: "Hosur-Pantnagar", origin: "Hosur", destination: "Pantnagar", distance_km: 2225, travel_days: 5, toll_cost: 8835},
+            {route: "Lucknow-Alwar", origin: "Lucknow", destination: "Alwar", distance_km: 499, travel_days: 1, toll_cost: 190},
+            {route: "Chennai-Hosur", origin: "Chennai", destination: "Hosur", distance_km: 323, travel_days: 1, toll_cost: 1930},
+            {route: "Lucknow-Alwar", origin: "Lucknow", destination: "Alwar", distance_km: 499, travel_days: 1, toll_cost: 385},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+            {route: "Lucknow-Alwar", origin: "Lucknow", destination: "Alwar", distance_km: 499, travel_days: 1, toll_cost: 385},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+            {route: "Chennai-Hosur", origin: "Chennai", destination: "Hosur", distance_km: 323, travel_days: 1, toll_cost: 1930},
+            {route: "Lucknow-Alwar", origin: "Lucknow", destination: "Alwar", distance_km: 499, travel_days: 1, toll_cost: 385},
+            {route: "Hosur-Jabalpur", origin: "Hosur", destination: "Jabalpur", distance_km: 1407, travel_days: 3, toll_cost: 6415},
+            {route: "Lucknow-Chennai", origin: "Lucknow", destination: "Chennai", distance_km: 1848, travel_days: 5, toll_cost: 11836},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+            {route: "Lucknow-Chennai", origin: "Lucknow", destination: "Chennai", distance_km: 1848, travel_days: 5, toll_cost: 11836},
+            {route: "Viralimalai-Vijayawada", origin: "Viralimalai", destination: "Vijayawada", distance_km: 852, travel_days: 2, toll_cost: 2270},
+            {route: "Lucknow-Chennai", origin: "Lucknow", destination: "Chennai", distance_km: 1848, travel_days: 5, toll_cost: 11836},
+            {route: "Pantnagar-Chennai", origin: "Pantnagar", destination: "Chennai", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+            {route: "Lucknow-Hosur", origin: "Lucknow", destination: "Hosur", distance_km: 1888, travel_days: 5, toll_cost: 7365},
+            {route: "Lucknow-Hosur", origin: "Lucknow", destination: "Hosur", distance_km: 1888, travel_days: 5, toll_cost: 7365},
+            {route: "Hosur-Hosur", origin: "Hosur", destination: "Hosur", distance_km: 14, travel_days: 1, toll_cost: 0},
+            {route: "Lucknow-Hosur", origin: "Lucknow", destination: "Hosur", distance_km: 1888, travel_days: 5, toll_cost: 7365},
+            {route: "Lucknow-Pantnagar", origin: "Lucknow", destination: "Pantnagar", distance_km: 341, travel_days: 1, toll_cost: 350},
+            {route: "Lucknow-Pantnagar", origin: "Lucknow", destination: "Pantnagar", distance_km: 341, travel_days: 1, toll_cost: 350},
+            {route: "Lucknow-Pantnagar", origin: "Lucknow", destination: "Pantnagar", distance_km: 341, travel_days: 1, toll_cost: 350},
+            {route: "Pantnagar-Hosur", origin: "Pantnagar", destination: "Hosur", distance_km: 2226, travel_days: 5, toll_cost: 10630},
+            {route: "Pantnagar-Alwar", origin: "Pantnagar", destination: "Alwar", distance_km: 415, travel_days: 1, toll_cost: 1610},
+            {route: "Hosur-Lucknow", origin: "Hosur", destination: "Lucknow", distance_km: 1888, travel_days: 5, toll_cost: 8870},
+            {route: "Pantnagar-Alwar", origin: "Pantnagar", destination: "Alwar", distance_km: 415, travel_days: 1, toll_cost: 1960},
+            {route: "Hosur-Lucknow", origin: "Hosur", destination: "Lucknow", distance_km: 1888, travel_days: 5, toll_cost: 8870},
+            {route: "Pantnagar-Alwar", origin: "Pantnagar", destination: "Alwar", distance_km: 415, travel_days: 1, toll_cost: 1610},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 560},
+            {route: "Pantnagar-Bhandara", origin: "Pantnagar", destination: "Bhandara", distance_km: 1102, travel_days: 3, toll_cost: 20415},
+            {route: "Pantnagar-Chennai", origin: "Pantnagar", destination: "Chennai", distance_km: 2218, travel_days: 5, toll_cost: 8010},
+            {route: "Pantnagar-Chennai", origin: "Pantnagar", destination: "Chennai", distance_km: 2218, travel_days: 5, toll_cost: 8010},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 560},
+            {route: "Sriperumpudur-Ennore", origin: "Sriperumpudur", destination: "Ennore", distance_km: 66, travel_days: 1, toll_cost: 615},
+            {route: "Pantnagar-Hosur", origin: "Pantnagar", destination: "Hosur", distance_km: 2226, travel_days: 5, toll_cost: 10630},
+            {route: "Alwar-Lucknow", origin: "Alwar", destination: "Lucknow", distance_km: 499, travel_days: 1, toll_cost: 590},
+            {route: "Pantnagar-Hosur", origin: "Pantnagar", destination: "Hosur", distance_km: 2226, travel_days: 5, toll_cost: 8835},
+            {route: "Chennai-Vijayawada", origin: "Chennai", destination: "Vijayawada", distance_km: 510, travel_days: 1, toll_cost: 1550},
+            {route: "Viralimalai-Vijayawada", origin: "Viralimalai", destination: "Vijayawada", distance_km: 852, travel_days: 2, toll_cost: 5165},
+            {route: "Chennai-Alwar", origin: "Chennai", destination: "Alwar", distance_km: 2099, travel_days: 5, toll_cost: 10000},
+            {route: "Hosur-Lucknow", origin: "Hosur", destination: "Lucknow", distance_km: 1888, travel_days: 5, toll_cost: 8870},
+            {route: "Pantnagar-Hosur", origin: "Pantnagar", destination: "Hosur", distance_km: 2226, travel_days: 5, toll_cost: 8835},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 350},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 350},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 350},
+            {route: "Pantnagar-Lucknow", origin: "Pantnagar", destination: "Lucknow", distance_km: 341, travel_days: 1, toll_cost: 350},
+            {route: "Sriperumpudur-Ennore", origin: "Sriperumpudur", destination: "Ennore", distance_km: 66, travel_days: 1, toll_cost: 560},
+            {route: "Viralimalai-Vijayawada", origin: "Viralimalai", destination: "Vijayawada", distance_km: 852, travel_days: 2, toll_cost: 4165},
+            {route: "Chennai-Pantnagar", origin: "Chennai", destination: "Pantnagar", distance_km: 2218, travel_days: 5, toll_cost: 8995},
+        ];
+
+        // Vehicle Fleet - 51 Vehicles (Sample - Include all from previous version)
+        let vehicleFleet = [
+            // LCV Category
+            {id: 1, category: "LCV", brand: "TATA", model: "Ace Gold", capacity: 0.9, body_type: "Closed", tyres: 4, mileage: 21, fuelType: "diesel", price: "4.50-6.69", capex: 650000, tyreCost: 8000, tyreLife: 80000, driverNormal: 1500, npPermit: 15000},
+            {id: 2, category: "LCV", brand: "Mahindra", model: "Jeeto", capacity: 0.715, body_type: "Closed", tyres: 4, mileage: 20, fuelType: "diesel", price: "4.79-5.67", capex: 550000, tyreCost: 7500, tyreLife: 80000, driverNormal: 1500, npPermit: 15000},
+            {id: 3, category: "LCV", brand: "Maruti", model: "Super Carry", capacity: 0.625, body_type: "Closed", tyres: 4, mileage: 20, fuelType: "petrol", price: "5.49-6.64", capex: 600000, tyreCost: 7000, tyreLife: 80000, driverNormal: 1500, npPermit: 15000},
+            {id: 4, category: "LCV", brand: "Ashok Leyland", model: "Dost", capacity: 1.0, body_type: "Open", tyres: 4, mileage: 19, fuelType: "diesel", price: "8.25-8.70", capex: 825000, tyreCost: 8500, tyreLife: 80000, driverNormal: 1800, npPermit: 18000},
+            {id: 5, category: "LCV", brand: "TATA", model: "407", capacity: 2.5, body_type: "Open", tyres: 6, mileage: 12, fuelType: "diesel", price: "13.26-14.30", capex: 1350000, tyreCost: 9000, tyreLife: 80000, driverNormal: 2000, npPermit: 20000},
+            {id: 6, category: "LCV", brand: "TATA", model: "Ace HT", capacity: 0.75, body_type: "Closed", tyres: 4, mileage: 22, fuelType: "diesel", price: "4.80-6.20", capex: 600000, tyreCost: 8000, tyreLife: 80000, driverNormal: 1500, npPermit: 15000},
+            {id: 7, category: "LCV", brand: "TATA", model: "Intra V30", capacity: 1.5, body_type: "Open", tyres: 4, mileage: 15, fuelType: "diesel", price: "7.50-9.20", capex: 850000, tyreCost: 8500, tyreLife: 80000, driverNormal: 1800, npPermit: 18000},
+            {id: 8, category: "LCV", brand: "Ashok Leyland", model: "Dost Plus", capacity: 1.25, body_type: "Open", tyres: 4, mileage: 18, fuelType: "diesel", price: "8.50-9.80", capex: 900000, tyreCost: 8500, tyreLife: 80000, driverNormal: 1800, npPermit: 18000},
+            {id: 9, category: "LCV", brand: "Mahindra", model: "Bolero Pickup", capacity: 1.0, body_type: "Open", tyres: 4, mileage: 16, fuelType: "diesel", price: "7.20-8.50", capex: 800000, tyreCost: 8000, tyreLife: 80000, driverNormal: 1800, npPermit: 18000},
+            {id: 10, category: "LCV", brand: "Mahindra", model: "Bolero Maxitruck", capacity: 1.5, body_type: "Open", tyres: 4, mileage: 14, fuelType: "diesel", price: "9.50-11.20", capex: 950000, tyreCost: 8500, tyreLife: 80000, driverNormal: 1800, npPermit: 18000},
+            {id: 11, category: "LCV", brand: "Eicher", model: "Pro 1049", capacity: 2.5, body_type: "Open", tyres: 6, mileage: 13, fuelType: "diesel", price: "12.50-14.80", capex: 1300000, tyreCost: 9000, tyreLife: 80000, driverNormal: 2000, npPermit: 20000},
+            {id: 12, category: "LCV", brand: "BharatBenz", model: "1017", capacity: 3.0, body_type: "Open", tyres: 6, mileage: 12, fuelType: "diesel", price: "14.50-16.20", capex: 1500000, tyreCost: 9500, tyreLife: 80000, driverNormal: 2000, npPermit: 20000},
+            
+            // MCV Category
+            {id: 13, category: "MCV", brand: "TATA", model: "1109 Ex", capacity: 4.0, body_type: "Open", tyres: 6, mileage: 10, fuelType: "diesel", price: "16.50-18.90", capex: 1700000, tyreCost: 9500, tyreLife: 80000, driverNormal: 2200, npPermit: 22000},
+            {id: 14, category: "MCV", brand: "Ashok Leyland", model: "U3718", capacity: 4.0, body_type: "Open", tyres: 6, mileage: 8.6, fuelType: "diesel", price: "15.80-17.50", capex: 1650000, tyreCost: 9500, tyreLife: 80000, driverNormal: 2200, npPermit: 22000},
+            {id: 15, category: "MCV", brand: "Eicher", model: "Pro 1095", capacity: 4.0, body_type: "Open", tyres: 6, mileage: 9.6, fuelType: "diesel", price: "16.20-18.50", capex: 1700000, tyreCost: 9500, tyreLife: 80000, driverNormal: 2200, npPermit: 22000},
+            {id: 16, category: "MCV", brand: "BharatBenz", model: "1215R", capacity: 4.5, body_type: "Closed", tyres: 6, mileage: 8, fuelType: "diesel", price: "18.50-20.80", capex: 1900000, tyreCost: 10000, tyreLife: 80000, driverNormal: 2300, npPermit: 23000},
+            {id: 17, category: "MCV", brand: "Mahindra", model: "Furio 9", capacity: 3.5, body_type: "Closed", tyres: 6, mileage: 8.6, fuelType: "diesel", price: "17.20-19.50", capex: 1800000, tyreCost: 9500, tyreLife: 80000, driverNormal: 2300, npPermit: 23000},
+            {id: 18, category: "MCV", brand: "TATA", model: "LPT 1216", capacity: 5.0, body_type: "Open", tyres: 6, mileage: 8, fuelType: "diesel", price: "19.50-22.00", capex: 2000000, tyreCost: 10000, tyreLife: 80000, driverNormal: 2400, npPermit: 24000},
+            {id: 19, category: "MCV", brand: "Ashok Leyland", model: "2516", capacity: 5.5, body_type: "Open", tyres: 10, mileage: 7.5, fuelType: "diesel", price: "21.00-24.00", capex: 2200000, tyreCost: 10500, tyreLife: 80000, driverNormal: 2500, npPermit: 25000},
+            {id: 20, category: "MCV", brand: "Eicher", model: "Pro 2049", capacity: 5.0, body_type: "Open", tyres: 10, mileage: 7.8, fuelType: "diesel", price: "20.50-23.00", capex: 2100000, tyreCost: 10000, tyreLife: 80000, driverNormal: 2500, npPermit: 25000},
+            
+            // HCV Category (7 vehicles - keeping sample)
+            {id: 21, category: "HCV", brand: "TATA", model: "Signa 3018.T", capacity: 8.0, body_type: "Open", tyres: 10, mileage: 6.5, fuelType: "diesel", price: "26.50-29.50", capex: 2700000, tyreCost: 11000, tyreLife: 80000, driverNormal: 2800, npPermit: 28000},
+            {id: 22, category: "HCV", brand: "TATA", model: "1623 RR", capacity: 12.0, body_type: "Open", tyres: 10, mileage: 5.5, fuelType: "diesel", price: "32.00-36.00", capex: 3300000, tyreCost: 12000, tyreLife: 80000, driverNormal: 3000, npPermit: 30000},
+            {id: 23, category: "HCV", brand: "Ashok Leyland", model: "3118", capacity: 10.0, body_type: "Open", tyres: 12, mileage: 5, fuelType: "diesel", price: "30.00-33.50", capex: 3100000, tyreCost: 11500, tyreLife: 80000, driverNormal: 2900, npPermit: 29000},
+            {id: 24, category: "HCV", brand: "BharatBenz", model: "2823R", capacity: 12.0, body_type: "Open", tyres: 12, mileage: 5.2, fuelType: "diesel", price: "31.50-35.00", capex: 3200000, tyreCost: 12000, tyreLife: 80000, driverNormal: 3000, npPermit: 30000},
+            {id: 25, category: "HCV", brand: "Volvo", model: "FM 9 440", capacity: 13.0, body_type: "Open", tyres: 12, mileage: 5.8, fuelType: "diesel", price: "35.00-40.00", capex: 3600000, tyreCost: 12500, tyreLife: 80000, driverNormal: 3200, npPermit: 32000},
+            {id: 26, category: "HCV", brand: "Scania", model: "P340", capacity: 14.0, body_type: "Open", tyres: 12, mileage: 5.5, fuelType: "diesel", price: "38.00-45.00", capex: 4000000, tyreCost: 13000, tyreLife: 80000, driverNormal: 3300, npPermit: 33000},
+            {id: 27, category: "HCV", brand: "Taurus", model: "35 Ton", capacity: 35.0, body_type: "Open", tyres: 16, mileage: 4.5, fuelType: "diesel", price: "40.00-45.00", capex: 4200000, tyreCost: 14000, tyreLife: 80000, driverNormal: 3500, npPermit: 35000},
+            
+            // Container, Trailer, Tanker, Refrigerated, Tipper (keeping brief sample - 24 total)
+            {id: 28, category: "Container", brand: "TATA", model: "Signa Container 20FT", capacity: 6.5, body_type: "Closed", tyres: 6, mileage: 8, fuelType: "diesel", price: "20.00-25.00", capex: 2200000, tyreCost: 10000, tyreLife: 80000, driverNormal: 2400, npPermit: 24000},
+            {id: 29, category: "Container", brand: "Ashok Leyland", model: "Container 20FT", capacity: 6.5, body_type: "Closed", tyres: 6, mileage: 7.5, fuelType: "diesel", price: "22.00-27.00", capex: 2350000, tyreCost: 10500, tyreLife: 80000, driverNormal: 2400, npPermit: 24000},
+            {id: 30, category: "Container", brand: "BharatBenz", model: "Container 20FT", capacity: 6.5, body_type: "Closed", tyres: 6, mileage: 8, fuelType: "diesel", price: "24.00-29.00", capex: 2600000, tyreCost: 10500, tyreLife: 80000, driverNormal: 2500, npPermit: 25000},
+            {id: 31, category: "Container", brand: "TATA", model: "Signa Container 32FT", capacity: 7.0, body_type: "Closed", tyres: 10, mileage: 6.5, fuelType: "diesel", price: "30.00-35.00", capex: 3200000, tyreCost: 11000, tyreLife: 80000, driverNormal: 2700, npPermit: 27000},
+            {id: 32, category: "Container", brand: "TATA", model: "Signa Container 32FT Heavy", capacity: 15.0, body_type: "Closed", tyres: 12, mileage: 6, fuelType: "diesel", price: "35.00-40.00", capex: 3700000, tyreCost: 12000, tyreLife: 80000, driverNormal: 2900, npPermit: 29000},
+            {id: 33, category: "Container", brand: "TATA", model: "Signa Container 40FT", capacity: 15.0, body_type: "Closed", tyres: 12, mileage: 5.5, fuelType: "diesel", price: "40.00-50.00", capex: 4300000, tyreCost: 12500, tyreLife: 80000, driverNormal: 3000, npPermit: 30000},
+            {id: 34, category: "Container", brand: "Ashok Leyland", model: "Container 40FT", capacity: 15.0, body_type: "Closed", tyres: 12, mileage: 5.5, fuelType: "diesel", price: "42.00-52.00", capex: 4500000, tyreCost: 12500, tyreLife: 80000, driverNormal: 3100, npPermit: 31000},
+            {id: 35, category: "Container", brand: "BharatBenz", model: "Container 40FT", capacity: 15.0, body_type: "Closed", tyres: 12, mileage: 5.5, fuelType: "diesel", price: "45.00-55.00", capex: 4800000, tyreCost: 13000, tyreLife: 80000, driverNormal: 3200, npPermit: 32000},
+            
+            {id: 36, category: "Trailer", brand: "TATA", model: "Prima Semi Trailer 32T", capacity: 32.0, body_type: "Open", tyres: 18, mileage: 4, fuelType: "diesel", price: "45.00-55.00", capex: 5000000, tyreCost: 14000, tyreLife: 80000, driverNormal: 3500, npPermit: 35000},
+            {id: 37, category: "Trailer", brand: "Ashok Leyland", model: "Semi Trailer 35T", capacity: 35.0, body_type: "Open", tyres: 20, mileage: 3.8, fuelType: "diesel", price: "50.00-60.00", capex: 5500000, tyreCost: 15000, tyreLife: 80000, driverNormal: 3700, npPermit: 37000},
+            {id: 38, category: "Trailer", brand: "BharatBenz", model: "Multi Axle Trailer 40T", capacity: 40.0, body_type: "Open", tyres: 22, mileage: 3.5, fuelType: "diesel", price: "60.00-75.00", capex: 6500000, tyreCost: 16000, tyreLife: 80000, driverNormal: 4000, npPermit: 40000},
+            {id: 39, category: "Trailer", brand: "Volvo", model: "FM 500 with Trailer", capacity: 38.0, body_type: "Open", tyres: 20, mileage: 3.8, fuelType: "diesel", price: "65.00-80.00", capex: 7000000, tyreCost: 15500, tyreLife: 80000, driverNormal: 4000, npPermit: 40000},
+            {id: 40, category: "Trailer", brand: "Scania", model: "R440 with Trailer", capacity: 42.0, body_type: "Open", tyres: 22, mileage: 3.6, fuelType: "diesel", price: "70.00-85.00", capex: 7500000, tyreCost: 16500, tyreLife: 80000, driverNormal: 4200, npPermit: 42000},
+            
+            {id: 41, category: "Tanker", brand: "TATA", model: "Signa Tanker 10000L", capacity: 6.0, body_type: "Tanker", tyres: 6, mileage: 7, fuelType: "diesel", price: "25.00-30.00", capex: 2700000, tyreCost: 10500, tyreLife: 80000, driverNormal: 2500, npPermit: 25000},
+            {id: 42, category: "Tanker", brand: "Ashok Leyland", model: "Tanker 10000L", capacity: 6.0, body_type: "Tanker", tyres: 6, mileage: 6.8, fuelType: "diesel", price: "26.00-31.00", capex: 2800000, tyreCost: 10500, tyreLife: 80000, driverNormal: 2500, npPermit: 25000},
+            {id: 43, category: "Tanker", brand: "BharatBenz", model: "Tanker 12000L", capacity: 8.0, body_type: "Tanker", tyres: 10, mileage: 6.5, fuelType: "diesel", price: "32.00-38.00", capex: 3400000, tyreCost: 11500, tyreLife: 80000, driverNormal: 2800, npPermit: 28000},
+            {id: 44, category: "Tanker", brand: "TATA", model: "Signa Tanker 15000L", capacity: 10.0, body_type: "Tanker", tyres: 10, mileage: 6, fuelType: "diesel", price: "35.00-42.00", capex: 3800000, tyreCost: 12000, tyreLife: 80000, driverNormal: 3000, npPermit: 30000},
+            
+            {id: 45, category: "Refrigerated", brand: "TATA", model: "Signa Reefer 15T", capacity: 8.0, body_type: "Reefer", tyres: 10, mileage: 5.5, fuelType: "diesel", price: "48.00-55.00", capex: 5200000, tyreCost: 12000, tyreLife: 80000, driverNormal: 3200, npPermit: 32000},
+            {id: 46, category: "Refrigerated", brand: "Ashok Leyland", model: "Reefer 18T", capacity: 10.0, body_type: "Reefer", tyres: 10, mileage: 5.2, fuelType: "diesel", price: "50.00-57.00", capex: 5400000, tyreCost: 12500, tyreLife: 80000, driverNormal: 3300, npPermit: 33000},
+            {id: 47, category: "Refrigerated", brand: "BharatBenz", model: "Premium Reefer 20T", capacity: 12.0, body_type: "Reefer", tyres: 12, mileage: 5, fuelType: "diesel", price: "55.00-65.00", capex: 6000000, tyreCost: 13000, tyreLife: 80000, driverNormal: 3500, npPermit: 35000},
+            
+            {id: 48, category: "Tipper", brand: "TATA", model: "407 Tipper", capacity: 3.0, body_type: "Tipper", tyres: 6, mileage: 11, fuelType: "diesel", price: "16.00-18.50", capex: 1750000, tyreCost: 9500, tyreLife: 80000, driverNormal: 2200, npPermit: 22000},
+            {id: 49, category: "Tipper", brand: "Ashok Leyland", model: "2018 Tipper", capacity: 4.5, body_type: "Tipper", tyres: 10, mileage: 7.5, fuelType: "diesel", price: "24.00-27.50", capex: 2500000, tyreCost: 11000, tyreLife: 80000, driverNormal: 2600, npPermit: 26000},
+            {id: 50, category: "Tipper", brand: "Eicher", model: "Pro 6010 Tipper", capacity: 5.0, body_type: "Tipper", tyres: 10, mileage: 7, fuelType: "diesel", price: "26.50-30.00", capex: 2800000, tyreCost: 11500, tyreLife: 80000, driverNormal: 2700, npPermit: 27000},
+            {id: 51, category: "Tipper", brand: "BharatBenz", model: "3018 Tipper", capacity: 8.0, body_type: "Tipper", tyres: 12, mileage: 6, fuelType: "diesel", price: "32.00-36.50", capex: 3400000, tyreCost: 12500, tyreLife: 80000, driverNormal: 3000, npPermit: 30000}
+        ];
+
+        // Comprehensive toll cost database from trip plan CSV
+        const tollCostDatabase = {
+            "Alwar-Chennai": 7185, "Chennai-Alwar": 8810,
+            "Alwar-Lucknow": 590, "Lucknow-Alwar": 385,
+            "Pantnagar-Lucknow": 560, "Lucknow-Pantnagar": 560,
+            "Alwar-Pantnagar": 1960, "Pantnagar-Alwar": 1960,
+            "Chennai-Hosur": 1930, "Hosur-Chennai": 3860,
+            "Alwar-Vijayawada": 4360, "Vijayawada-Alwar": 1850,
+            "Chennai-Lucknow": 7588, "Lucknow-Chennai": 11836,
+            "Hosur-Lucknow": 8870, "Lucknow-Hosur": 7365,
+            "Bangalore-Chennai": 2185, "Chennai-Bangalore": 2185,
+            "Bangalore-Pantnagar": 8985, "Pantnagar-Bangalore": 8995,
+            "Alwar-Hosur": 5825, "Hosur-Alwar": 11330,
+            "Chennai-Pantnagar": 8995, "Pantnagar-Chennai": 8995,
+            "Hosur-Jabalpur": 6415, "Jabalpur-Hosur": 5110,
+            "Bhandara-Chennai": 1725, "Chennai-Bhandara": 1725,
+            "Sriperumpudur-Ennore": 615, "Ennore-Sriperumpudur": 560,
+            "Bhandara-Coimbatore": 4975, "Bhandara-Pantnagar": 2250,
+            "Chennai-Vijayawada": 2685, "Viralimalai-Vijayawada": 2270
+        };
+
+        let nextCustomId = 1000;
+        let currentTripData = null;
+        let selectedVehicle = null;
+        let selectedCategory = "All";
+        let editingVehicleId = null;
+        let tollCost = 0;
+
+        // ===== FUEL PRICE FUNCTIONS =====
+        function updateFuelPriceDisplay() {
+            document.getElementById('dieselPriceDisplay').textContent = `₹${fuelPrices.diesel.toFixed(2)}/L`;
+            document.getElementById('petrolPriceDisplay').textContent = `₹${fuelPrices.petrol.toFixed(2)}/L`;
+            document.getElementById('cngPriceDisplay').textContent = `₹${fuelPrices.cng.toFixed(2)}/Kg`;
+        }
+
+        function openFuelPriceModal() {
+            document.getElementById('edit_diesel').value = fuelPrices.diesel;
+            document.getElementById('edit_petrol').value = fuelPrices.petrol;
+            document.getElementById('edit_cng').value = fuelPrices.cng;
+            document.getElementById('fuelPriceModal').classList.add('active');
+        }
+
+        function closeFuelPriceModal() {
+            document.getElementById('fuelPriceModal').classList.remove('active');
+        }
+
+        function saveFuelPrices() {
+            fuelPrices.diesel = parseFloat(document.getElementById('edit_diesel').value);
+            fuelPrices.petrol = parseFloat(document.getElementById('edit_petrol').value);
+            fuelPrices.cng = parseFloat(document.getElementById('edit_cng').value);
+            
+            updateFuelPriceDisplay();
+            closeFuelPriceModal();
+            alert('✅ Fuel prices updated successfully!');
+        }
+
+        // ===== TRIP PLANNING FUNCTIONS =====
+        function getUniqueCities() {
+            const cities = new Set();
+            tripMaster.forEach(trip => {
+                cities.add(trip.origin);
+                cities.add(trip.destination);
+            });
+            return Array.from(cities).sort();
+        }
+
+        function handleOriginInput() {
+            const input = document.getElementById('originInput').value.toLowerCase();
+            const suggestions = document.getElementById('originSuggestions');
+            
+            if (input.length === 0) {
+                suggestions.classList.remove('active');
+                return;
+            }
+
+            const cities = getUniqueCities();
+            const filtered = cities.filter(c => c.toLowerCase().includes(input));
+
+            suggestions.innerHTML = filtered.map(city => 
+                `<div class="suggestion-item" onclick="selectOrigin('${city}')">${city}</div>`
+            ).join('');
+            suggestions.classList.toggle('active', filtered.length > 0);
+            checkAndAutoFill();
+        }
+
+        function handleDestinationInput() {
+            const input = document.getElementById('destinationInput').value.toLowerCase();
+            const suggestions = document.getElementById('destinationSuggestions');
+            
+            if (input.length === 0) {
+                suggestions.classList.remove('active');
+                return;
+            }
+
+            const cities = getUniqueCities();
+            const filtered = cities.filter(c => c.toLowerCase().includes(input));
+
+            suggestions.innerHTML = filtered.map(city => 
+                `<div class="suggestion-item" onclick="selectDestination('${city}')">${city}</div>`
+            ).join('');
+            suggestions.classList.toggle('active', filtered.length > 0);
+            checkAndAutoFill();
+        }
+
+        function selectOrigin(city) {
+            document.getElementById('originInput').value = city;
+            document.getElementById('originSuggestions').classList.remove('active');
+            checkAndAutoFill();
+        }
+
+        function selectDestination(city) {
+            document.getElementById('destinationInput').value = city;
+            document.getElementById('destinationSuggestions').classList.remove('active');
+            checkAndAutoFill();
+        }
+
+        function checkAndAutoFill() {
+            const origin = document.getElementById('originInput').value.trim();
+            const destination = document.getElementById('destinationInput').value.trim();
+
+            if (!origin || !destination) {
+                clearAutoFillFields();
+                return;
+            }
+
+            const route = tripMaster.find(t => 
+                t.origin.toLowerCase() === origin.toLowerCase() &&
+                t.destination.toLowerCase() === destination.toLowerCase()
+            );
+
+            if (route) {
+                document.getElementById('distanceInput').value = route.distance_km;
+                document.getElementById('travelDaysInput').value = route.travel_days;
+                updateSummary(origin, destination, route);
+                validateForm();
+            } else {
+                clearAutoFillFields();
+                updateSummary(origin, destination, null);
+            }
+        }
+
+        function clearAutoFillFields() {
+            document.getElementById('distanceInput').value = '';
+            document.getElementById('travelDaysInput').value = '';
+            document.getElementById('nextBtn1').disabled = true;
+        }
+
+        function updateSummary(origin, destination, route) {
+            if (route) {
+                document.getElementById('tripSummary').textContent = `${origin} → ${destination} • ${route.distance_km}km • ${route.travel_days} day(s)`;
+            } else {
+                document.getElementById('tripSummary').textContent = `${origin} → ${destination} • Route not found`;
+            }
+        }
+
+        function validateForm() {
+            const origin = document.getElementById('originInput').value.trim();
+            const destination = document.getElementById('destinationInput').value.trim();
+            const distance = document.getElementById('distanceInput').value;
+
+            const isValid = origin && destination && distance;
+            document.getElementById('nextBtn1').disabled = !isValid;
+        }
+
+        function resetForm() {
+            document.getElementById('originInput').value = '';
+            document.getElementById('destinationInput').value = '';
+            clearAutoFillFields();
+            document.getElementById('tripSummary').textContent = 'Enter origin and destination...';
+        }
+
+        function proceedToFleetSelection() {
+            const origin = document.getElementById('originInput').value.trim();
+            const destination = document.getElementById('destinationInput').value.trim();
+            const distance = document.getElementById('distanceInput').value;
+            const days = document.getElementById('travelDaysInput').value;
+
+            if (!origin || !destination || !distance) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            currentTripData = {
+                origin, destination, distance_km: parseFloat(distance), 
+                travel_days: parseInt(days)
+            };
+
+            displayFleetSelection();
+        }
+
+        function displayFleetSelection() {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            document.getElementById('stepIndicator').classList.add('step-2');
+
+            const tripDisplay = `${currentTripData.origin} → ${currentTripData.destination} | ${currentTripData.distance_km}km | ${currentTripData.travel_days} days`;
+            document.getElementById('tripDisplaySummary').textContent = tripDisplay;
+
+            // Auto-populate toll cost from database
+            const routeKey = `${currentTripData.origin}-${currentTripData.destination}`;
+            const autoToll = tollCostDatabase[routeKey] || 0;
+            document.getElementById('tollCostInput').value = autoToll;
+            tollCost = autoToll;
+
+            const categories = ['All', ...new Set(vehicleFleet.map(v => v.category))];
+            const filterHTML = categories.map(cat => 
+                `<button class="category-btn ${cat === 'All' ? 'active' : ''}" onclick="filterByCategory('${cat}')">${cat}</button>`
+            ).join('');
+            document.getElementById('categoryFilter').innerHTML = filterHTML;
+
+            displayVehicles();
+        }
+
+        function filterByCategory(category) {
+            selectedCategory = category;
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            displayVehicles();
+        }
+
+        function displayVehicles() {
+            const filtered = selectedCategory === 'All' 
+                ? vehicleFleet 
+                : vehicleFleet.filter(v => v.category === selectedCategory);
+            
+            document.getElementById('vehicleCount').textContent = filtered.length;
+            
+            const vehicleGrid = document.getElementById('vehicleGrid');
+            vehicleGrid.innerHTML = filtered.map(vehicle => `
+                <div class="vehicle-card ${vehicle.id >= 1000 ? 'custom' : ''}" id="vehicle-${vehicle.id}" onclick="selectVehicle(${vehicle.id})">
+                    <div><span class="vehicle-card-label ${vehicle.id >= 1000 ? 'custom' : ''}">${vehicle.category}${vehicle.id >= 1000 ? ' (Custom)' : ''}</span></div>
+                    <h4>${vehicle.brand} ${vehicle.model}</h4>
+                    <div class="vehicle-specs">
+                        <p><strong>Capacity:</strong> ${vehicle.capacity}T | <strong>Body:</strong> ${vehicle.body_type}</p>
+                        <p><strong>Mileage:</strong> ${vehicle.mileage} km/L | <strong>Fuel:</strong> ${vehicle.fuelType}</p>
+                        <p><strong>CAPEX:</strong> ₹${vehicle.capex.toLocaleString()}</p>
+                    </div>
+                    <button class="edit-btn" onclick="openEditVehicleModal(${vehicle.id}, event)">✏️ Edit</button>
+                    ${vehicle.id >= 1000 ? `<button class="delete-btn" onclick="deleteCustomVehicle(${vehicle.id}, event)">🗑️ Delete</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function selectVehicle(id) {
+            document.querySelectorAll('.vehicle-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById(`vehicle-${id}`).classList.add('selected');
+            selectedVehicle = vehicleFleet.find(v => v.id === id);
+            document.getElementById('nextBtn2').disabled = false;
+        }
+
+        // ===== CUSTOM VEHICLE FUNCTIONS =====
+        function openCustomVehicleModal() {
+            editingVehicleId = null;
+            document.getElementById('vehicleModalTitle').textContent = '➕ Add Custom Vehicle';
+            generateVehicleForm(null);
+            document.getElementById('vehicleModal').classList.add('active');
+        }
+
+        function openEditVehicleModal(vehicleId, event) {
+            event.stopPropagation();
+            editingVehicleId = vehicleId;
+            const vehicle = vehicleFleet.find(v => v.id === vehicleId);
+            document.getElementById('vehicleModalTitle').textContent = '✏️ Edit Vehicle';
+            generateVehicleForm(vehicle);
+            document.getElementById('vehicleModal').classList.add('active');
+        }
+
+        function generateVehicleForm(vehicle) {
+            const formHTML = `
+                <div class="modal-form-group"><label>Brand/Manufacturer *</label><input type="text" id="v_brand" value="${vehicle?.brand || ''}" required></div>
+                <div class="modal-form-group"><label>Model Name *</label><input type="text" id="v_model" value="${vehicle?.model || ''}" required></div>
+                <div class="modal-form-group"><label>Category *</label>
+                    <select id="v_category" required>
+                        <option value="">Select Category</option>
+                        <option ${vehicle?.category === 'LCV' ? 'selected' : ''}>LCV</option>
+                        <option ${vehicle?.category === 'MCV' ? 'selected' : ''}>MCV</option>
+                        <option ${vehicle?.category === 'HCV' ? 'selected' : ''}>HCV</option>
+                        <option ${vehicle?.category === 'Container' ? 'selected' : ''}>Container</option>
+                        <option ${vehicle?.category === 'Trailer' ? 'selected' : ''}>Trailer</option>
+                        <option ${vehicle?.category === 'Tanker' ? 'selected' : ''}>Tanker</option>
+                        <option ${vehicle?.category === 'Refrigerated' ? 'selected' : ''}>Refrigerated</option>
+                        <option ${vehicle?.category === 'Tipper' ? 'selected' : ''}>Tipper</option>
+                    </select>
+                </div>
+                <div class="modal-form-group"><label>Capacity (Tons) *</label><input type="number" id="v_capacity" value="${vehicle?.capacity || ''}" step="0.1" required></div>
+                <div class="modal-form-group"><label>Body Type *</label><input type="text" id="v_body" value="${vehicle?.body_type || ''}" placeholder="e.g., Closed, Open, Tipper" required></div>
+                <div class="modal-form-group"><label>Mileage (km/L) *</label><input type="number" id="v_mileage" value="${vehicle?.mileage || ''}" step="0.1" required></div>
+                <div class="modal-form-group"><label>Fuel Type *</label>
+                    <select id="v_fuelType" required>
+                        <option value="">Select Fuel</option>
+                        <option ${vehicle?.fuelType === 'diesel' ? 'selected' : ''}>diesel</option>
+                        <option ${vehicle?.fuelType === 'petrol' ? 'selected' : ''}>petrol</option>
+                        <option ${vehicle?.fuelType === 'cng' ? 'selected' : ''}>cng</option>
+                    </select>
+                </div>
+                <div class="modal-form-group"><label>Number of Tyres *</label><input type="number" id="v_tyres" value="${vehicle?.tyres || ''}" required></div>
+                <div class="modal-form-group"><label>CAPEX (₹) *</label><input type="number" id="v_capex" value="${vehicle?.capex || ''}" required></div>
+                <div class="modal-form-group"><label>Tyre Cost Each (₹)</label><input type="number" id="v_tyreCost" value="${vehicle?.tyreCost || ''}" step="0.01"></div>
+                <div class="modal-form-group"><label>Tyre Life (km)</label><input type="number" id="v_tyreLife" value="${vehicle?.tyreLife || 80000}"></div>
+                <div class="modal-form-group"><label>Driver Cost Daily (₹)</label><input type="number" id="v_driver" value="${vehicle?.driverNormal || ''}" step="0.01"></div>
+                <div class="modal-form-group"><label>NP Permit Annual (₹)</label><input type="number" id="v_permit" value="${vehicle?.npPermit || ''}" step="0.01"></div>
+            `;
+            document.getElementById('vehicleFormGrid').innerHTML = formHTML;
+        }
+
+        function closeVehicleModal() {
+            document.getElementById('vehicleModal').classList.remove('active');
+        }
+
+        function saveVehicle() {
+            const brand = document.getElementById('v_brand').value;
+            const model = document.getElementById('v_model').value;
+            const category = document.getElementById('v_category').value;
+            const capacity = parseFloat(document.getElementById('v_capacity').value);
+            const body = document.getElementById('v_body').value;
+            const mileage = parseFloat(document.getElementById('v_mileage').value);
+            const fuelType = document.getElementById('v_fuelType').value;
+            const tyres = parseInt(document.getElementById('v_tyres').value);
+            const capex = parseFloat(document.getElementById('v_capex').value);
+            const tyreCost = parseFloat(document.getElementById('v_tyreCost').value) || 10000;
+            const tyreLife = parseFloat(document.getElementById('v_tyreLife').value) || 80000;
+            const driver = parseFloat(document.getElementById('v_driver').value) || 2000;
+            const permit = parseFloat(document.getElementById('v_permit').value) || 20000;
+
+            if (!brand || !model || !category || !capacity || !body || !mileage || !fuelType || !tyres || !capex) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            if (editingVehicleId) {
+                const vehicle = vehicleFleet.find(v => v.id === editingVehicleId);
+                vehicle.brand = brand;
+                vehicle.model = model;
+                vehicle.category = category;
+                vehicle.capacity = capacity;
+                vehicle.body_type = body;
+                vehicle.mileage = mileage;
+                vehicle.fuelType = fuelType;
+                vehicle.tyres = tyres;
+                vehicle.capex = capex;
+                vehicle.tyreCost = tyreCost;
+                vehicle.tyreLife = tyreLife;
+                vehicle.driverNormal = driver;
+                vehicle.npPermit = permit;
+            } else {
+                const newVehicle = {
+                    id: nextCustomId++,
+                    category, brand, model, capacity, body_type: body, tyres, mileage, fuelType, 
+                    price: `${(capex/100000).toFixed(1)}-${(capex/100000*1.2).toFixed(1)}`,
+                    capex, tyreCost, tyreLife, driverNormal: driver, npPermit: permit
+                };
+                vehicleFleet.push(newVehicle);
+            }
+
+            closeVehicleModal();
+            displayVehicles();
+            alert(editingVehicleId ? '✅ Vehicle updated!' : '✅ Custom vehicle added!');
+        }
+
+        function deleteCustomVehicle(id, event) {
+            event.stopPropagation();
+            if (confirm('Are you sure you want to delete this custom vehicle?')) {
+                vehicleFleet = vehicleFleet.filter(v => v.id !== id);
+                displayVehicles();
+                alert('✅ Vehicle deleted!');
+            }
+        }
+
+        // ===== COST ANALYSIS FUNCTIONS =====
+        function proceedToStep3() {
+            if (!selectedVehicle) {
+                alert('Please select a vehicle');
+                return;
+            }
+
+            tollCost = parseFloat(document.getElementById('tollCostInput').value) || 0;
+            displayCostAnalysis();
+        }
+
+        function displayCostAnalysis() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+            document.getElementById('stepIndicator').classList.remove('step-2');
+            document.getElementById('stepIndicator').classList.add('step-3');
+
+            const tripDisplay = `${currentTripData.origin} → ${currentTripData.destination} | ${currentTripData.distance_km}km | ${currentTripData.travel_days} days`;
+            document.getElementById('tripCostSummary').textContent = tripDisplay;
+
+            const vehicleDisplay = `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.category}, ${selectedVehicle.capacity}T)`;
+            document.getElementById('vehicleCostSummary').textContent = vehicleDisplay;
+
+            const fuelPrice = fuelPrices[selectedVehicle.fuelType];
+            document.getElementById('fuelTypeSummary').textContent = selectedVehicle.fuelType.charAt(0).toUpperCase() + selectedVehicle.fuelType.slice(1);
+            document.getElementById('mileageSummary').textContent = selectedVehicle.mileage;
+            document.getElementById('fuelPriceSummary').textContent = fuelPrice.toFixed(2);
+            document.getElementById('tollDisplaySummary').textContent = tollCost.toFixed(2);
+
+            calculateCosts();
+        }
+
+        function calculateCosts() {
+            const trip = currentTripData;
+            const vehicle = selectedVehicle;
+            const fuelPrice = fuelPrices[vehicle.fuelType];
+
+            // ===== ADMIN INPUTS (Vehicle Parameters) =====
+            const exShowroomPrice = vehicle.capex;
+            const fabricationCost = 0;
+            const salvagePercent = 0.25;
+            const usefulLifeYears = 7;
+            const daysPerYear = 300;
+            const insurancePercent = 0.022;
+            const annualRoadTax = 18000; // Standard RTO road tax
+            const gpsMonthly = 450; // GPS tracker monthly cost
+            const incidentalPerTrip = 500; // Incidental operational allowance - FLAT FEE PER TRIP
+            const tyreCostEach = vehicle.tyreCost;
+            const tyreCount = vehicle.tyres;
+            const tyreLifeKm = vehicle.tyreLife;
+            const mileageKmpl = vehicle.mileage;
+            const npPermitAnnual = 20000; // National Permit annual cost
+            const rmPerDay = 333; // R&M Cost per day: ₹333/day
+
+            // Determine driver cost based on vehicle category (Trailer uses ₹2500, others use ₹2300)
+            const isTrailer = vehicle.category === 'Trailer';
+            const driverDailyNormal = isTrailer ? 2500 : 2300;
+
+            // Commercial Parameters
+            const sgandaPercent = 0.05;
+            const marginPercent = 0.05;
+
+            // ===== DERIVED VEHICLE VALUES =====
+            const vehicleCapitalCost = exShowroomPrice + fabricationCost;
+            const salvageValue = vehicleCapitalCost * salvagePercent;
+            const depreciationBase = vehicleCapitalCost - salvageValue;
+            const usefulLifeDays = usefulLifeYears * daysPerYear;
+
+            // ===== FIXED COSTS (PER DAY) =====
+            const deprPerDay = depreciationBase / usefulLifeDays;
+            const annualInsurance = vehicleCapitalCost * insurancePercent;
+            const insurancePerDay = annualInsurance / daysPerYear;
+            const roadtaxPerDay = annualRoadTax / daysPerYear;
+            const rmPerDayCalc = rmPerDay; // R&M: ₹333/day
+            const gpsPerDay = gpsMonthly / 30;
+            const npPerDay = npPermitAnnual / daysPerYear;
+            const driverPerDay = driverDailyNormal;
+
+            const fixedPerDay = deprPerDay + insurancePerDay + roadtaxPerDay + rmPerDayCalc + 
+                                driverPerDay + gpsPerDay + npPerDay;
+
+            // ===== FIXED COSTS (PER TRIP) =====
+            const fixedPerTrip = (fixedPerDay * trip.travel_days) + incidentalPerTrip;
+            const fixedPerKm = trip.distance_km > 0 ? fixedPerTrip / trip.distance_km : 0;
+
+            // ===== VARIABLE COSTS (PER KM) =====
+            const fuelCostPerKm = fuelPrice / mileageKmpl;
+            const tyreCostPerKm = (tyreCostEach * tyreCount) / tyreLifeKm;
+            const rmVariablePerKm = 0;
+            const totalVariablePerKm = fuelCostPerKm + tyreCostPerKm + rmVariablePerKm;
+
+            // ===== VARIABLE COSTS (PER TRIP) =====
+            const variablePerTrip = totalVariablePerKm * trip.distance_km;
+            const fuelCostPerTrip = fuelCostPerKm * trip.distance_km;
+            const tyreCostPerTrip = tyreCostPerKm * trip.distance_km;
+            const fuelRequiredLiters = trip.distance_km / mileageKmpl;
+
+            // ===== TOLL COSTS =====
+            const tollPerTrip = tollCost;
+            const tollPerKm = trip.distance_km > 0 ? tollPerTrip / trip.distance_km : 0;
+
+            // ===== FINAL COMMERCIALS =====
+            const operatingCost = fixedPerTrip + variablePerTrip + tollPerTrip;
+            const sganda = operatingCost * sgandaPercent;
+            const margin = (operatingCost + sganda) * marginPercent;
+            const totalTripCost = operatingCost + sganda + margin;
+            const totalPerKm = trip.distance_km > 0 ? totalTripCost / trip.distance_km : 0;
+
+            // Validate calculations before displaying
+            if (isNaN(totalTripCost) || !isFinite(totalTripCost)) {
+                console.error('Cost calculation error:', {fixedPerTrip, variablePerTrip, tollPerTrip, operatingCost});
+                alert('Error in cost calculation. Please check your inputs.');
+                return;
+            }
+
+            // ===== BUILD BREAKDOWN HTML =====
+            const breakdown = document.getElementById('costBreakdown');
+            if (!breakdown) {
+                console.error('Cost breakdown container not found!');
+                return;
+            }
+            
+            breakdown.innerHTML = `
+                <div class="cost-section">
+                    <div class="cost-section-title">📌 FIXED COSTS</div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Depreciation/Day (7yr @ 25% salvage)</div>
+                        <div class="cost-row-value">₹${deprPerDay.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Depreciation (${trip.travel_days} days)</div>
+                        <div class="cost-row-value">₹${(deprPerDay * trip.travel_days).toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Insurance/Day @ 2.2%</div>
+                        <div class="cost-row-value">₹${insurancePerDay.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Insurance (${trip.travel_days} days)</div>
+                        <div class="cost-row-value">₹${(insurancePerDay * trip.travel_days).toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Road Tax/Day (RTO)</div>
+                        <div class="cost-row-value">₹${roadtaxPerDay.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Road Tax (${trip.travel_days} days)</div>
+                        <div class="cost-row-value">₹${(roadtaxPerDay * trip.travel_days).toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">R&M Cost/Day @ ₹333/day</div>
+                        <div class="cost-row-value">₹${rmPerDayCalc.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">R&M Cost (${trip.travel_days} days)</div>
+                        <div class="cost-row-value">₹${(rmPerDayCalc * trip.travel_days).toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Driver Cost/Day (${isTrailer ? '₹2,500 Trailer' : '₹2,300 Truck'})</div>
+                        <div class="cost-row-value">₹${driverPerDay.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Driver Cost (${trip.travel_days} days)</div>
+                        <div class="cost-row-value">₹${(driverPerDay * trip.travel_days).toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">NP Permit/Day</div>
+                        <div class="cost-row-value">₹${npPerDay.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">NP Permit (${trip.travel_days} days)</div>
+                        <div class="cost-row-value">₹${(npPerDay * trip.travel_days).toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">GPS Cost/Day</div>
+                        <div class="cost-row-value">₹${gpsPerDay.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">GPS Cost (${trip.travel_days} days)</div>
+                        <div class="cost-row-value">₹${(gpsPerDay * trip.travel_days).toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Incidental (Flat Fee per Trip)</div>
+                        <div class="cost-row-value">₹${incidentalPerTrip.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row total">
+                        <div class="cost-row-label">Total Fixed Cost/Trip</div>
+                        <div class="cost-row-value">₹${fixedPerTrip.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <div class="cost-section">
+                    <div class="cost-section-title">⛽ FUEL COSTS (${vehicle.fuelType.toUpperCase()})</div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Fuel Price/Unit</div>
+                        <div class="cost-row-value">₹${fuelPrice.toFixed(2)}/${vehicle.fuelType === 'cng' ? 'Kg' : 'L'}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Vehicle Mileage</div>
+                        <div class="cost-row-value">${vehicle.mileage} km/L</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">📐 Fuel Required (Distance ÷ Mileage)</div>
+                        <div class="cost-row-value">${fuelRequiredLiters.toFixed(2)} L</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">📐 Fuel Cost/km (Price ÷ Mileage)</div>
+                        <div class="cost-row-value">₹${fuelCostPerKm.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">📐 Total Fuel Cost (Fuel Required × Price)</div>
+                        <div class="cost-row-value">₹${fuelCostPerTrip.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <div class="cost-section">
+                    <div class="cost-section-title">💨 VARIABLE COSTS</div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Fuel Cost/km</div>
+                        <div class="cost-row-value">₹${fuelCostPerKm.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Total Fuel Cost (${trip.distance_km}km)</div>
+                        <div class="cost-row-value">₹${fuelCostPerTrip.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Tyre Cost/km (${vehicle.tyres} tyres)</div>
+                        <div class="cost-row-value">₹${tyreCostPerKm.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Total Tyre Cost (${trip.distance_km}km)</div>
+                        <div class="cost-row-value">₹${tyreCostPerTrip.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row total">
+                        <div class="cost-row-label">Total Variable Cost (Fuel + Tyre)</div>
+                        <div class="cost-row-value">₹${variablePerTrip.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <div class="cost-section">
+                    <div class="cost-section-title">🛣️ TOLL COSTS (VARIABLE)</div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Toll Cost/km</div>
+                        <div class="cost-row-value">₹${tollPerKm.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Total Toll Cost (${trip.distance_km}km)</div>
+                        <div class="cost-row-value">₹${tollPerTrip.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <div class="cost-section">
+                    <div class="cost-section-title">💰 OPERATING & TOTAL COST</div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Fixed Cost/Trip</div>
+                        <div class="cost-row-value">₹${fixedPerTrip.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Variable Cost/Trip</div>
+                        <div class="cost-row-value">₹${variablePerTrip.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Toll Cost/Trip</div>
+                        <div class="cost-row-value">₹${tollPerTrip.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row total">
+                        <div class="cost-row-label">Operating Cost (Fixed + Variable + Toll)</div>
+                        <div class="cost-row-value">₹${operatingCost.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">SG&A Overhead (5%)</div>
+                        <div class="cost-row-value">₹${sganda.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="cost-row-label">Profit Margin (5%)</div>
+                        <div class="cost-row-value">₹${margin.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row total" style="font-size: 1.15em;">
+                        <div class="cost-row-label">🎯 TOTAL TRIP COST</div>
+                        <div class="cost-row-value">₹${totalTripCost.toFixed(2)}</div>
+                    </div>
+                    <div class="cost-row total" style="font-size: 1.15em;">
+                        <div class="cost-row-label">🎯 COST PER KM</div>
+                        <div class="cost-row-value">₹${totalPerKm.toFixed(2)}</div>
+                    </div>
+                </div>
+            `;
+
+            window.tripCostResult = {
+                // Fixed costs
+                fixedPerDay: fixedPerDay,
+                fixedPerTrip: fixedPerTrip,
+                fixedPerKm: fixedPerKm,
+                depreciationPerDay: deprPerDay,
+                insurancePerDay: insurancePerDay,
+                rmPerDay: rmPerDayCalc,
+                incidentalPerTrip: incidentalPerTrip,
+                
+                // Variable costs
+                fuelCostPerKm: fuelCostPerKm,
+                tyreCostPerKm: tyreCostPerKm,
+                totalVariablePerKm: totalVariablePerKm,
+                fuelCostPerTrip: fuelCostPerTrip,
+                tyreCostPerTrip: tyreCostPerTrip,
+                variablePerTrip: variablePerTrip,
+                fuelRequiredLiters: fuelRequiredLiters,
+                
+                // Toll costs
+                tollPerTrip: tollPerTrip,
+                tollPerKm: tollPerKm,
+                
+                // Final costs
+                operatingCost: operatingCost,
+                sgandaCost: sganda,
+                marginCost: margin,
+                totalCost: totalTripCost,
+                costPerKm: totalPerKm,
+                
+                // Trip and vehicle info for reports
+                trip: trip,
+                vehicle: vehicle,
+                fuelPrice: fuelPrice
+            };
+        }
+
+        // ===== MULTI-VEHICLE COMPARISON FUNCTIONS =====
+        let selectedVehiclesForComparison = [];
+
+        function displayComparisonVehicles() {
+            const comparisonGrid = document.getElementById('comparisonVehicleGrid');
+            comparisonGrid.innerHTML = vehicleFleet.map(vehicle => `
+                <div class="vehicle-card comparison-selectable" id="comp-vehicle-${vehicle.id}" 
+                     onclick="toggleComparisonVehicle(${vehicle.id}, event)" 
+                     style="cursor: pointer; user-select: none;">
+                    <div><span class="vehicle-card-label ${vehicle.id >= 1000 ? 'custom' : ''}">${vehicle.category}${vehicle.id >= 1000 ? ' (Custom)' : ''}</span></div>
+                    <h4>${vehicle.brand} ${vehicle.model}</h4>
+                    <div class="vehicle-specs">
+                        <p><strong>Capacity:</strong> ${vehicle.capacity}T</p>
+                        <p><strong>Mileage:</strong> ${vehicle.mileage} km/L</p>
+                        <p><strong>Fuel:</strong> ${vehicle.fuelType}</p>
+                        <p><strong>CAPEX:</strong> ₹${vehicle.capex.toLocaleString()}</p>
+                    </div>
+                </div>
+            `).join('');
+            updateComparisonUI();
+        }
+
+        function toggleComparisonVehicle(vehicleId, event) {
+            event.stopPropagation();
+            const index = selectedVehiclesForComparison.indexOf(vehicleId);
+            if (index > -1) {
+                selectedVehiclesForComparison.splice(index, 1);
+            } else {
+                selectedVehiclesForComparison.push(vehicleId);
+            }
+            updateComparisonUI();
+        }
+
+        function updateComparisonUI() {
+            document.getElementById('selectedCount').textContent = selectedVehiclesForComparison.length;
+            document.querySelectorAll('.comparison-selectable').forEach(card => {
+                const vehicleId = parseInt(card.id.replace('comp-vehicle-', ''));
+                if (selectedVehiclesForComparison.includes(vehicleId)) {
+                    card.style.borderWidth = '4px';
+                    card.style.borderColor = '#ff9800';
+                    card.style.backgroundColor = '#fff8f0';
+                    card.style.boxShadow = '0 0 15px rgba(255, 152, 0, 0.3)';
+                } else {
+                    card.style.borderWidth = '2px';
+                    card.style.borderColor = '#e0e0e0';
+                    card.style.backgroundColor = '#f9f9f9';
+                    card.style.boxShadow = 'none';
+                }
+            });
+        }
+
+        function clearComparisonSelection() {
+            selectedVehiclesForComparison = [];
+            updateComparisonUI();
+        }
+
+        function generateComparisonTable() {
+            if (selectedVehiclesForComparison.length < 2) {
+                alert('❌ Please select at least 2 vehicles to compare');
+                return;
+            }
+
+            const selectedVehicles = vehicleFleet.filter(v => selectedVehiclesForComparison.includes(v.id));
+            window.comparisonVehicles = selectedVehicles;
+            
+            // Calculate detailed costs for each vehicle
+            const comparisonData = selectedVehicles.map(vehicle => {
+                const fuelPrice = fuelPrices[vehicle.fuelType];
+                const mileageKmpl = vehicle.mileage;
+                const fuelCostPerKm = fuelPrice / mileageKmpl;
+                const tyreCostPerKm = (vehicle.tyreCost * vehicle.tyres) / vehicle.tyreLife;
+                const totalVarPerKm = fuelCostPerKm + tyreCostPerKm;
+                
+                const deprPerDay = (vehicle.capex * 0.75) / (7 * 300);
+                const insurancePerDay = (vehicle.capex * 0.022) / 300;
+                const roadtaxPerDay = 18000 / 300;
+                const rmPerDay = 333;
+                const gpsPerDay = 450 / 30;
+                const npPerDay = 20000 / 300;
+                const driverPerDay = vehicle.category === 'Trailer' ? 2500 : 2300;
+                const fixedPerDay = deprPerDay + insurancePerDay + roadtaxPerDay + rmPerDay + driverPerDay + gpsPerDay + npPerDay;
+                
+                const fixedPerTrip = (fixedPerDay * currentTripData.travel_days) + 500;
+                const varPerTrip = totalVarPerKm * currentTripData.distance_km;
+                const fuelRequired = currentTripData.distance_km / mileageKmpl;
+                const totalOpCost = fixedPerTrip + varPerTrip + tollCost;
+                const sganda = totalOpCost * 0.05;
+                const margin = (totalOpCost + sganda) * 0.05;
+                const finalCost = totalOpCost + sganda + margin;
+                
+                return {
+                    id: vehicle.id,
+                    vehicle: vehicle,
+                    fuelPrice: fuelPrice,
+                    fuelRequired: fuelRequired,
+                    fuelCostPerKm: fuelCostPerKm,
+                    fuelCostPerTrip: fuelCostPerKm * currentTripData.distance_km,
+                    tyreCostPerKm: tyreCostPerKm,
+                    tyreCostPerTrip: tyreCostPerKm * currentTripData.distance_km,
+                    fixedPerDay: fixedPerDay,
+                    fixedPerTrip: fixedPerTrip,
+                    variablePerTrip: varPerTrip,
+                    operatingCost: totalOpCost,
+                    sgandaCost: sganda,
+                    marginCost: margin,
+                    totalCost: finalCost,
+                    costPerKm: finalCost / currentTripData.distance_km
+                };
+            });
+
+            window.comparisonData = comparisonData;
+            displayComparisonTable(comparisonData);
+            
+            // Show next button after comparison is generated
+            document.getElementById('proceedToReportsBtn').disabled = false;
+        }
+
+        function displayComparisonTable(data) {
+            const tableHtml = `
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">📊 Fleet Cost Comparison - ${currentTripData.origin} → ${currentTripData.destination}</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Vehicle</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Category</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Capacity</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Mileage</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Fuel Type</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Fuel Required</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: right;">Fixed Cost</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: right;">Variable Cost</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: right;">Operating Cost</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: right; background: #fff3e0; font-weight: bold;">Total Cost</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: right; background: #fff3e0; font-weight: bold;">Cost/km</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map((d, idx) => `
+                                <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#f9f9f9'};">
+                                    <td style="padding: 12px; border: 1px solid #ddd;"><strong>${d.vehicle.brand} ${d.vehicle.model}</strong></td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${d.vehicle.category}</td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${d.vehicle.capacity}T</td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${d.vehicle.mileage} km/L</td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${d.vehicle.fuelType}</td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${d.fuelRequired.toFixed(2)} L</td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">₹${d.fixedPerTrip.toFixed(2)}</td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">₹${d.variablePerTrip.toFixed(2)}</td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">₹${d.operatingCost.toFixed(2)}</td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: right; background: #fff3e0; font-weight: bold; color: #e65100;">₹${d.totalCost.toFixed(2)}</td>
+                                    <td style="padding: 12px; border: 1px solid #ddd; text-align: right; background: #fff3e0; font-weight: bold; color: #e65100;">₹${d.costPerKm.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                    <strong>✅ Comparison Complete!</strong> ${data.length} vehicles analyzed. Use the reports section for detailed PDF/Excel exports with full breakdown.
+                </div>
+            `;
+            
+            document.getElementById('comparisonMessage').style.display = 'none';
+            document.getElementById('comparisonTable').innerHTML = tableHtml;
+            document.getElementById('comparisonTable').style.display = 'block';
+        }
+
+        function goBackToStep2() {
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            document.getElementById('stepIndicator').classList.remove('step-3');
+            document.getElementById('stepIndicator').classList.add('step-2');
+        }
+
+        function proceedToStep4() {
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+            document.getElementById('stepIndicator').classList.remove('step-3');
+            document.getElementById('stepIndicator').classList.add('step-4');
+            document.getElementById('proceedToReportsBtn').disabled = true;
+
+            // Display current vehicle analysis
+            const msg = `✅ Cost Analysis Complete!<br><br>
+                <strong>📍 Route:</strong> ${currentTripData.origin} → ${currentTripData.destination}<br>
+                <strong>🚛 Selected Vehicle:</strong> ${selectedVehicle.brand} ${selectedVehicle.model}<br>
+                <strong>📏 Distance:</strong> ${currentTripData.distance_km}km | <strong>📅 Days:</strong> ${currentTripData.travel_days}<br>
+                <strong>─────────────────────────</strong><br>
+                <strong>Fixed Cost/Trip:</strong> ₹${window.tripCostResult.fixedPerTrip.toFixed(2)} (₹${window.tripCostResult.fixedPerKm.toFixed(2)}/km)<br>
+                <strong>Variable Cost/Trip:</strong> ₹${window.tripCostResult.variablePerTrip.toFixed(2)} (₹${window.tripCostResult.totalVariablePerKm.toFixed(2)}/km)<br>
+                <strong>⛽ Fuel Required:</strong> ${window.tripCostResult.fuelRequiredLiters.toFixed(2)} L @ ₹${fuelPrices[selectedVehicle.fuelType].toFixed(2)}/L<br>
+                <strong>🛣️ Toll Cost:</strong> ₹${window.tripCostResult.tollPerTrip.toFixed(2)}<br>
+                <strong>─────────────────────────</strong><br>
+                <strong>Operating Cost:</strong> ₹${window.tripCostResult.operatingCost.toFixed(2)}<br>
+                <strong>SG&A (5%):</strong> ₹${window.tripCostResult.sgandaCost.toFixed(2)}<br>
+                <strong>Profit Margin (5%):</strong> ₹${window.tripCostResult.marginCost.toFixed(2)}<br>
+                <strong>═══════════════════════════</strong><br>
+                <strong>🎯 Total Trip Cost:</strong> ₹${window.tripCostResult.totalCost.toFixed(2)}<br>
+                <strong>💰 Cost per km:</strong> ₹${window.tripCostResult.costPerKm.toFixed(2)}`;
+            
+            document.getElementById('comparisonMessage').innerHTML = msg;
+            document.getElementById('comparisonMessage').style.display = 'block';
+            document.getElementById('comparisonTable').style.display = 'none';
+            
+            // Clear previous selections and display all vehicles
+            selectedVehiclesForComparison = [];
+            displayComparisonVehicles();
+        }
+
+        function goBackToStep3() {
+            document.getElementById('step4').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+            document.getElementById('stepIndicator').classList.remove('step-4');
+            document.getElementById('stepIndicator').classList.add('step-3');
+        }
+
+        function proceedToStep5() {
+            document.getElementById('step4').classList.add('hidden');
+            document.getElementById('step5').classList.remove('hidden');
+            document.getElementById('stepIndicator').classList.remove('step-4');
+            document.getElementById('stepIndicator').classList.add('step-5');
+
+            let reportMsg = `✅ Analysis Complete - Ready for Export!<br><br>
+                <strong>📍 Trip:</strong> ${currentTripData.origin} → ${currentTripData.destination}<br>
+                <strong>🚛 Selected Vehicle:</strong> ${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.category})<br>
+                <strong>📏 Distance:</strong> ${currentTripData.distance_km}km<br>
+                <strong>⛽ Fuel Used:</strong> ${selectedVehicle.fuelType} (${window.tripCostResult.fuelRequiredLiters.toFixed(2)} L)<br>
+                <strong>💰 Total Trip Cost:</strong> ₹${window.tripCostResult.totalCost.toFixed(2)}<br>
+                <strong>📊 Cost per km:</strong> ₹${window.tripCostResult.costPerKm.toFixed(2)}`;
+            
+            if (window.comparisonData && window.comparisonData.length > 1) {
+                reportMsg += `<br><br>
+                <strong style="color: #667eea;">📈 Fleet Comparison Data:</strong><br>
+                Compared ${window.comparisonData.length} vehicles for same route<br>
+                Lowest Cost: ₹${Math.min(...window.comparisonData.map(d => d.totalCost)).toFixed(2)}<br>
+                Highest Cost: ₹${Math.max(...window.comparisonData.map(d => d.totalCost)).toFixed(2)}`;
+            }
+            
+            document.getElementById('reportMessage').innerHTML = reportMsg;
+        }
+
+        function goBackToStep4() {
+            document.getElementById('step5').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+            document.getElementById('stepIndicator').classList.remove('step-5');
+            document.getElementById('stepIndicator').classList.add('step-4');
+        }
+
+        function downloadReportTXT() {
+            const report = `
+╔════════════════════════════════════════════════════════════════╗
+║     FLEETCOST PLANNER PRO - TRIP ANALYSIS REPORT              ║
+╚════════════════════════════════════════════════════════════════╝
+
+📍 TRIP DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Origin:         ${currentTripData.origin}
+  Destination:    ${currentTripData.destination}
+  Distance:       ${currentTripData.distance_km} km
+  Travel Days:    ${currentTripData.travel_days} days
+
+🚛 VEHICLE DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Brand:          ${selectedVehicle.brand}
+  Model:          ${selectedVehicle.model}
+  Category:       ${selectedVehicle.category}
+  Capacity:       ${selectedVehicle.capacity} Tons
+  Body Type:      ${selectedVehicle.body_type}
+  Mileage:        ${selectedVehicle.mileage} km/L
+  CAPEX:          ₹${selectedVehicle.capex.toLocaleString()}
+  Tyres:          ${selectedVehicle.tyres}
+
+⛽ FUEL DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Fuel Type:      ${selectedVehicle.fuelType.toUpperCase()}
+  Fuel Price:     ₹${fuelPrices[selectedVehicle.fuelType].toFixed(2)}/${selectedVehicle.fuelType === 'cng' ? 'Kg' : 'L'}
+  Fuel Required:  ${window.tripCostResult.fuelRequiredLiters.toFixed(2)} L
+  Fuel Cost/km:   ₹${window.tripCostResult.fuelCostPerKm.toFixed(2)}
+  Total Fuel Cost:₹${window.tripCostResult.fuelCostPerTrip.toFixed(2)}
+
+💰 FIXED COSTS (Per Day / Per Trip / Per KM)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Depreciation:   ₹${window.tripCostResult.depreciationPerDay.toFixed(2)} / ₹${(window.tripCostResult.depreciationPerDay * currentTripData.travel_days).toFixed(2)} / ₹${(window.tripCostResult.depreciationPerDay * currentTripData.travel_days / currentTripData.distance_km).toFixed(2)}
+  Interest @ 9%:  ₹${window.tripCostResult.interestPerDay.toFixed(2)} / ₹${(window.tripCostResult.interestPerDay * currentTripData.travel_days).toFixed(2)} / ₹${(window.tripCostResult.interestPerDay * currentTripData.travel_days / currentTripData.distance_km).toFixed(2)}
+  Insurance:      ₹${window.tripCostResult.insurancePerDay.toFixed(2)} / ₹${(window.tripCostResult.insurancePerDay * currentTripData.travel_days).toFixed(2)} / ₹${(window.tripCostResult.insurancePerDay * currentTripData.travel_days / currentTripData.distance_km).toFixed(2)}
+  ─────────────────────────────────────────────────
+  Total Fixed:    ₹${(window.tripCostResult.fixedPerDay).toFixed(2)} / ₹${window.tripCostResult.fixedPerTrip.toFixed(2)} / ₹${window.tripCostResult.fixedPerKm.toFixed(2)}
+
+💨 VARIABLE COSTS (Per KM / Per Trip)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Fuel Cost:      ₹${window.tripCostResult.fuelCostPerKm.toFixed(2)} / ₹${window.tripCostResult.fuelCostPerTrip.toFixed(2)}
+  Tyre Cost:      ₹${window.tripCostResult.tyreCostPerKm.toFixed(2)} / ₹${window.tripCostResult.tyreCostPerTrip.toFixed(2)}
+  ─────────────────────────────────────────────────
+  Total Variable: ₹${window.tripCostResult.totalVariablePerKm.toFixed(2)} / ₹${window.tripCostResult.variablePerTrip.toFixed(2)}
+
+🛣️ TOLL COSTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Toll Per KM:    ₹${window.tripCostResult.tollPerKm.toFixed(2)}
+  Toll Per Trip:  ₹${window.tripCostResult.tollPerTrip.toFixed(2)}
+
+💰 FINAL COST SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Operating Cost: ₹${window.tripCostResult.operatingCost.toFixed(2)}
+  SG&A (5%):      ₹${window.tripCostResult.sgandaCost.toFixed(2)}
+  Profit Margin:  ₹${window.tripCostResult.marginCost.toFixed(2)}
+  ═══════════════════════════════════════════════════
+  TOTAL COST:     ₹${window.tripCostResult.totalCost.toFixed(2)}
+  COST PER KM:    ₹${window.tripCostResult.costPerKm.toFixed(2)}
+
+Generated: ${new Date().toLocaleString()}
+Report ID: FCP-${Date.now()}
+`;
+            
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(report));
+            element.setAttribute('download', `FleetCost_Report_${Date.now()}.txt`);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            
+            alert('✅ Text report downloaded successfully!');
+        }
+
+        function downloadReportExcel() {
+            // Create Excel-like CSV with detailed breakdown and graphs
+            const csv = `FLEETCOST PLANNER PRO - EXCEL REPORT,${new Date().toLocaleDateString()}
+Trip Analysis Report,${new Date().toLocaleTimeString()}
+
+TRIP DETAILS
+Origin,${currentTripData.origin}
+Destination,${currentTripData.destination}
+Distance (km),${currentTripData.distance_km}
+Travel Days,${currentTripData.travel_days}
+
+VEHICLE DETAILS
+Brand,${selectedVehicle.brand}
+Model,${selectedVehicle.model}
+Category,${selectedVehicle.category}
+Capacity (Tons),${selectedVehicle.capacity}
+Body Type,${selectedVehicle.body_type}
+Mileage (km/L),${selectedVehicle.mileage}
+Fuel Type,${selectedVehicle.fuelType.toUpperCase()}
+CAPEX (₹),${selectedVehicle.capex.toLocaleString()}
+Tyres,${selectedVehicle.tyres}
+
+FUEL INFORMATION
+Fuel Price (₹/L),${fuelPrices[selectedVehicle.fuelType].toFixed(2)}
+Fuel Required (L),${window.tripCostResult.fuelRequiredLiters.toFixed(2)}
+Fuel Cost/km (₹),${window.tripCostResult.fuelCostPerKm.toFixed(2)}
+Total Fuel Cost (₹),${window.tripCostResult.fuelCostPerTrip.toFixed(2)}
+
+FIXED COSTS BREAKDOWN
+Cost Component,Per Day (₹),Per Trip (₹),Per KM (₹)
+Depreciation,${window.tripCostResult.depreciationPerDay.toFixed(2)},${(window.tripCostResult.depreciationPerDay * currentTripData.travel_days).toFixed(2)},${(window.tripCostResult.depreciationPerDay * currentTripData.travel_days / currentTripData.distance_km).toFixed(2)}
+Interest (9%),${window.tripCostResult.interestPerDay.toFixed(2)},${(window.tripCostResult.interestPerDay * currentTripData.travel_days).toFixed(2)},${(window.tripCostResult.interestPerDay * currentTripData.travel_days / currentTripData.distance_km).toFixed(2)}
+Insurance,${window.tripCostResult.insurancePerDay.toFixed(2)},${(window.tripCostResult.insurancePerDay * currentTripData.travel_days).toFixed(2)},${(window.tripCostResult.insurancePerDay * currentTripData.travel_days / currentTripData.distance_km).toFixed(2)}
+Total Fixed,${(window.tripCostResult.fixedPerDay).toFixed(2)},${window.tripCostResult.fixedPerTrip.toFixed(2)},${window.tripCostResult.fixedPerKm.toFixed(2)}
+
+VARIABLE COSTS BREAKDOWN
+Cost Component,Per KM (₹),Per Trip (₹)
+Fuel Cost,${window.tripCostResult.fuelCostPerKm.toFixed(2)},${window.tripCostResult.fuelCostPerTrip.toFixed(2)}
+Tyre Cost,${window.tripCostResult.tyreCostPerKm.toFixed(2)},${window.tripCostResult.tyreCostPerTrip.toFixed(2)}
+Total Variable,${window.tripCostResult.totalVariablePerKm.toFixed(2)},${window.tripCostResult.variablePerTrip.toFixed(2)}
+
+TOLL COSTS
+Per KM (₹),${window.tripCostResult.tollPerKm.toFixed(2)}
+Per Trip (₹),${window.tripCostResult.tollPerTrip.toFixed(2)}
+
+FINAL COST SUMMARY
+Cost Category,Amount (₹)
+Operating Cost,${window.tripCostResult.operatingCost.toFixed(2)}
+SG&A Overhead (5%),${window.tripCostResult.sgandaCost.toFixed(2)}
+Profit Margin (5%),${window.tripCostResult.marginCost.toFixed(2)}
+TOTAL TRIP COST,${window.tripCostResult.totalCost.toFixed(2)}
+COST PER KM,${window.tripCostResult.costPerKm.toFixed(2)}
+
+COST BREAKDOWN %
+Fixed Cost %,${((window.tripCostResult.fixedPerTrip / window.tripCostResult.operatingCost) * 100).toFixed(2)}%
+Variable Cost %,${((window.tripCostResult.variablePerTrip / window.tripCostResult.operatingCost) * 100).toFixed(2)}%
+Toll Cost %,${((window.tripCostResult.tollPerTrip / window.tripCostResult.operatingCost) * 100).toFixed(2)}%
+SG&A %,${((window.tripCostResult.sgandaCost / window.tripCostResult.totalCost) * 100).toFixed(2)}%
+Profit %,${((window.tripCostResult.marginCost / window.tripCostResult.totalCost) * 100).toFixed(2)}%
+`;
+            
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
+            element.setAttribute('download', `FleetCost_Report_${Date.now()}.csv`);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            
+            alert('✅ Excel report (CSV) downloaded successfully!');
+        }
+
+        function downloadReportPDF() {
+            // Create HTML to print as PDF
+            const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>FleetCost Report</title>
+                <style>
+                    body { font-family: Arial; margin: 20px; }
+                    h1 { color: #667eea; text-align: center; }
+                    h2 { color: #333; border-bottom: 2px solid #667eea; padding: 10px 0; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                    th { background-color: #667eea; color: white; }
+                    tr:nth-child(even) { background-color: #f9f9f9; }
+                    .summary { background: #f0f4ff; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                    .highlight { color: #667eea; font-weight: bold; font-size: 1.2em; }
+                    .cost-box { background: #fff3e0; padding: 15px; margin: 15px 0; border-left: 4px solid #ff9800; }
+                </style>
+            </head>
+            <body>
+                <h1>🚚 FleetCost Planner Pro - Trip Analysis Report</h1>
+                <p style="text-align: center; color: #666;">Report Generated: ${new Date().toLocaleString()}</p>
+                
+                <h2>📍 Trip Details</h2>
+                <table>
+                    <tr><td>Origin</td><td>${currentTripData.origin}</td></tr>
+                    <tr><td>Destination</td><td>${currentTripData.destination}</td></tr>
+                    <tr><td>Distance (km)</td><td>${currentTripData.distance_km}</td></tr>
+                    <tr><td>Travel Days</td><td>${currentTripData.travel_days}</td></tr>
+                </table>
+
+                <h2>🚛 Vehicle Details</h2>
+                <table>
+                    <tr><td>Brand</td><td>${selectedVehicle.brand}</td></tr>
+                    <tr><td>Model</td><td>${selectedVehicle.model}</td></tr>
+                    <tr><td>Category</td><td>${selectedVehicle.category}</td></tr>
+                    <tr><td>Capacity (Tons)</td><td>${selectedVehicle.capacity}</td></tr>
+                    <tr><td>Mileage (km/L)</td><td>${selectedVehicle.mileage}</td></tr>
+                    <tr><td>Fuel Type</td><td>${selectedVehicle.fuelType.toUpperCase()}</td></tr>
+                    <tr><td>CAPEX (₹)</td><td>₹${selectedVehicle.capex.toLocaleString()}</td></tr>
+                </table>
+
+                <h2>⛽ Fuel Information</h2>
+                <table>
+                    <tr><td>Fuel Price</td><td>₹${fuelPrices[selectedVehicle.fuelType].toFixed(2)}/L</td></tr>
+                    <tr><td>Fuel Required</td><td>${window.tripCostResult.fuelRequiredLiters.toFixed(2)} L</td></tr>
+                    <tr><td>Fuel Cost/km</td><td>₹${window.tripCostResult.fuelCostPerKm.toFixed(2)}</td></tr>
+                    <tr><td>Total Fuel Cost</td><td>₹${window.tripCostResult.fuelCostPerTrip.toFixed(2)}</td></tr>
+                </table>
+
+                <h2>💰 Fixed Costs Breakdown</h2>
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Per Day (₹)</th>
+                        <th>Per Trip (₹)</th>
+                        <th>Per KM (₹)</th>
+                    </tr>
+                    <tr>
+                        <td>Depreciation</td>
+                        <td>${window.tripCostResult.depreciationPerDay.toFixed(2)}</td>
+                        <td>${(window.tripCostResult.depreciationPerDay * currentTripData.travel_days).toFixed(2)}</td>
+                        <td>${(window.tripCostResult.depreciationPerDay * currentTripData.travel_days / currentTripData.distance_km).toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Interest (9%)</td>
+                        <td>${window.tripCostResult.interestPerDay.toFixed(2)}</td>
+                        <td>${(window.tripCostResult.interestPerDay * currentTripData.travel_days).toFixed(2)}</td>
+                        <td>${(window.tripCostResult.interestPerDay * currentTripData.travel_days / currentTripData.distance_km).toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Insurance</td>
+                        <td>${window.tripCostResult.insurancePerDay.toFixed(2)}</td>
+                        <td>${(window.tripCostResult.insurancePerDay * currentTripData.travel_days).toFixed(2)}</td>
+                        <td>${(window.tripCostResult.insurancePerDay * currentTripData.travel_days / currentTripData.distance_km).toFixed(2)}</td>
+                    </tr>
+                    <tr style="background: #f0f4ff; font-weight: bold;">
+                        <td>TOTAL FIXED</td>
+                        <td>₹${(window.tripCostResult.fixedPerDay).toFixed(2)}</td>
+                        <td>₹${window.tripCostResult.fixedPerTrip.toFixed(2)}</td>
+                        <td>₹${window.tripCostResult.fixedPerKm.toFixed(2)}</td>
+                    </tr>
+                </table>
+
+                <h2>💨 Variable Costs Breakdown</h2>
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Per KM (₹)</th>
+                        <th>Per Trip (₹)</th>
+                    </tr>
+                    <tr>
+                        <td>Fuel Cost</td>
+                        <td>${window.tripCostResult.fuelCostPerKm.toFixed(2)}</td>
+                        <td>${window.tripCostResult.fuelCostPerTrip.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Tyre Cost</td>
+                        <td>${window.tripCostResult.tyreCostPerKm.toFixed(2)}</td>
+                        <td>${window.tripCostResult.tyreCostPerTrip.toFixed(2)}</td>
+                    </tr>
+                    <tr style="background: #f0f4ff; font-weight: bold;">
+                        <td>TOTAL VARIABLE</td>
+                        <td>₹${window.tripCostResult.totalVariablePerKm.toFixed(2)}</td>
+                        <td>₹${window.tripCostResult.variablePerTrip.toFixed(2)}</td>
+                    </tr>
+                </table>
+
+                <h2>🛣️ Toll Costs</h2>
+                <table>
+                    <tr>
+                        <td>Per KM</td>
+                        <td>₹${window.tripCostResult.tollPerKm.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Per Trip</td>
+                        <td>₹${window.tripCostResult.tollPerTrip.toFixed(2)}</td>
+                    </tr>
+                </table>
+
+                <h2>🎯 Final Cost Summary</h2>
+                <div class="cost-box">
+                    <p><strong>Operating Cost:</strong> ₹${window.tripCostResult.operatingCost.toFixed(2)}</p>
+                    <p><strong>SG&A Overhead (5%):</strong> ₹${window.tripCostResult.sgandaCost.toFixed(2)}</p>
+                    <p><strong>Profit Margin (5%):</strong> ₹${window.tripCostResult.marginCost.toFixed(2)}</p>
+                </div>
+                
+                <div class="summary">
+                    <p class="highlight">TOTAL TRIP COST: ₹${window.tripCostResult.totalCost.toFixed(2)}</p>
+                    <p class="highlight">COST PER KM: ₹${window.tripCostResult.costPerKm.toFixed(2)}</p>
+                </div>
+
+                <h2>📊 Cost Distribution (%)</h2>
+                <table>
+                    <tr>
+                        <td>Fixed Cost</td>
+                        <td>${((window.tripCostResult.fixedPerTrip / window.tripCostResult.operatingCost) * 100).toFixed(2)}%</td>
+                    </tr>
+                    <tr>
+                        <td>Variable Cost</td>
+                        <td>${((window.tripCostResult.variablePerTrip / window.tripCostResult.operatingCost) * 100).toFixed(2)}%</td>
+                    </tr>
+                    <tr>
+                        <td>Toll Cost</td>
+                        <td>${((window.tripCostResult.tollPerTrip / window.tripCostResult.operatingCost) * 100).toFixed(2)}%</td>
+                    </tr>
+                    <tr>
+                        <td>SG&A</td>
+                        <td>${((window.tripCostResult.sgandaCost / window.tripCostResult.totalCost) * 100).toFixed(2)}%</td>
+                    </tr>
+                    <tr>
+                        <td>Profit</td>
+                        <td>${((window.tripCostResult.marginCost / window.tripCostResult.totalCost) * 100).toFixed(2)}%</td>
+                    </tr>
+                </table>
+
+                <p style="margin-top: 40px; text-align: center; color: #999; font-size: 0.9em;">
+                    Report ID: FCP-${Date.now()} | Generated on ${new Date().toLocaleString()}
+                </p>
+            </body>
+            </html>
+            `;
+            
+            const printWindow = window.open('', '', 'width=900,height=700');
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function resetToStart() {
+            currentTripData = null;
+            selectedVehicle = null;
+            selectedCategory = 'All';
+            tollCost = 0;
+
+            document.getElementById('step5').classList.add('hidden');
+            document.getElementById('step1').classList.remove('hidden');
+            document.getElementById('stepIndicator').classList.remove('step-5');
+
+            resetForm();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            validateForm();
+            updateFuelPriceDisplay();
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.form-group-wrapper')) {
+                document.getElementById('originSuggestions').classList.remove('active');
+                document.getElementById('destinationSuggestions').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
