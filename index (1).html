@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FleetCost Planner Pro - Advanced Fleet Management</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚛 FleetCost Planner Pro v10</h1>
+            <p>Advanced Fleet Management with Real-Time Fuel Pricing & Manual Edit Options</p>
+        </header>
+
+        <div class="main-content">
+            <div class="step-indicator" id="stepIndicator">
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Trip Planning</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Fleet Selection</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Cost Analysis</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Comparison</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-label">Reports</div>
+                </div>
+            </div>
+
+            <!-- STEP 1: TRIP PLANNING -->
+            <div id="step1" class="step-content active">
+                <h2>📍 Step 1: Trip Planning</h2>
+                <div class="info-box">✏️ Enter your trip details. Distance, Travel Days & Toll Cost are now FULLY EDITABLE! Search for routes or enter custom values.</div>
+
+                <div class="form-section">
+                    <h3>📌 Trip Details</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="originInput">Origin City *</label>
+                            <input type="text" id="originInput" placeholder="e.g., Alwar, Chennai" onkeyup="handleOriginInput()" autocomplete="off">
+                            <div class="suggestions-dropdown" id="originSuggestions" style="border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; display: none;"></div>
+                            <div class="help-text">Type to search</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="destinationInput">Destination City *</label>
+                            <input type="text" id="destinationInput" placeholder="e.g., Chennai, Lucknow" onkeyup="handleDestinationInput()" autocomplete="off">
+                            <div class="suggestions-dropdown" id="destinationSuggestions" style="border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; display: none;"></div>
+                            <div class="help-text">Type to search</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📊 Route Parameters - ✏️ CLICK EDIT TO MANUALLY CHANGE</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="distanceInput">Distance (km) *</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" id="distanceInput" placeholder="Auto-filled" style="flex: 1;" readonly>
+                                <button class="btn btn-sm edit-btn" onclick="toggleEditMode('distanceInput')">Edit</button>
+                            </div>
+                            <div class="help-text">💡 Click Edit to manually change</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="travelDaysInput">Travel Days *</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" id="travelDaysInput" placeholder="Auto-filled" style="flex: 1;" readonly>
+                                <button class="btn btn-sm edit-btn" onclick="toggleEditMode('travelDaysInput')">Edit</button>
+                            </div>
+                            <div class="help-text">💡 Click Edit to manually change</div>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="tollCostInput">Toll Cost (₹) *</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" id="tollCostInput" placeholder="Auto-filled" style="flex: 1;" readonly min="0">
+                                <button class="btn btn-sm edit-btn" onclick="toggleEditMode('tollCostInput')">Edit</button>
+                            </div>
+                            <div class="help-text">💡 Click Edit to manually change</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-box">
+                    <h4>📋 Trip Summary</h4>
+                    <p id="tripSummary">Enter origin and destination...</p>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
+                    <button class="btn btn-primary" id="nextBtn1" onclick="proceedToFleetSelection()" disabled>Next: Fleet Selection →</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: FLEET SELECTION -->
+            <div id="step2" class="step-content hidden">
+                <h2>Step 2: Fleet Selection - Toll Cost</h2>
+                <div class="info-box">Select from 51 vehicles across 8 categories. Enter toll cost for your route.</div>
+
+                <div class="trip-summary-display">
+                    <strong>Current Trip:</strong> <span id="tripDisplaySummary"></span>
+                </div>
+
+                <div class="form-section">
+                    <h3>💰 Toll Cost</h3>
+                    <input type="number" id="tollCostInput2" placeholder="Auto-filled from verified route database" min="0" value="0" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 0.95em; background: #f0f4ff; border-color: #667eea;">
+                    <div class="help-text">✏️ Toll cost is auto-populated from verified route database. You can manually edit if needed.</div>
+                </div>
+
+                <div class="form-section">
+                    <h3>🚗 Vehicle Category Filter</h3>
+                    <div class="category-filter" id="categoryFilter"></div>
+                </div>
+
+                <div class="form-section">
+                    <h3>🚗 Available Vehicles (<span id="vehicleCount">0</span> matching)</h3>
+                    <div class="vehicle-grid" id="vehicleGrid"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goBackToStep1()">← Back</button>
+                    <button class="btn btn-primary" id="nextBtn2" onclick="proceedToStep3()" disabled>Next: Cost Analysis →</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: COST ANALYSIS -->
+            <div id="step3" class="step-content hidden">
+                <h2>Step 3: Cost Analysis with Detailed Fuel Breakdown</h2>
+                <div class="info-box">Detailed cost breakdown including precise fuel calculations based on mileage and current fuel prices.</div>
+
+                <div class="trip-summary-display">
+                    <strong>Trip:</strong> <span id="tripCostSummary"></span><br>
+                    <strong>Vehicle:</strong> <span id="vehicleCostSummary"></span><br>
+                    <strong>Fuel Type:</strong> <span id="fuelTypeSummary">Diesel</span> | <strong>Mileage:</strong> <span id="mileageSummary">0</span> km/L | <strong>Fuel Price:</strong> ₹<span id="fuelPriceSummary">0</span>/L<br>
+                    <strong>Toll Cost:</strong> ₹<span id="tollDisplaySummary">0</span>
+                </div>
+
+                <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #e65100; font-size: 0.9em;">
+                    <strong>Fuel Calculation Formula</strong><br>
+                    Fuel Required = Distance ÷ Mileage<br>
+                    Fuel Cost/km = Fuel Price ÷ Mileage<br>
+                    Total Fuel Cost = Fuel Required × Fuel Price
+                </div>
+
+                <div class="form-section">
+                    <h3>Cost Breakdown</h3>
+                    <div class="cost-breakdown" id="costBreakdown"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goBackToStep2()">← Back</button>
+                    <button class="btn btn-primary" onclick="proceedToStep4()">Next: Comparison →</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: COMPARISON -->
+            <div id="step4" class="step-content hidden">
+                <h2>Step 4: Fleet Comparison</h2>
+                <div class="info-box">Click on vehicle cards to select multiple vehicles (min. 2). Selected vehicles show orange borders. Generate comparison table to analyze all metrics side-by-side.</div>
+
+                <div id="comparisonVehicleSelector" style="margin: 20px 0;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Select Vehicles to Compare: <span id="selectedCount">0</span>/51</h3>
+                    <div class="vehicle-grid" id="comparisonVehicleGrid"></div>
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="clearComparisonSelection()">Clear Selection</button>
+                        <button class="btn btn-primary" onclick="generateComparisonTable()" style="width: auto;">Generate Comparison</button>
+                    </div>
+                </div>
+
+                <div id="comparisonContent" style="margin: 20px 0;">
+                    <div id="comparisonMessage" style="display: none;"></div>
+                    <div id="comparisonTable" style="overflow-x: auto; display: none;"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goBackToStep3()">← Back</button>
+                    <button class="btn btn-primary" id="proceedToReportsBtn" onclick="proceedToStep5()" disabled>Next: Reports →</button>
+                </div>
+            </div>
+
+            <!-- STEP 5: REPORTS -->
+            <div id="step5" class="step-content hidden">
+                <h2>Step 5: Reports Export</h2>
+                <div class="info-box">Generate and export detailed reports of your fleet analysis with complete fuel cost breakdown.</div>
+
+                <div id="reportContent" style="margin: 20px 0;">
+                    <div class="success-message" id="reportMessage"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goBackToStep4()">← Back</button>
+                    <button class="btn btn-primary" onclick="downloadReportTXT()">📝 Download TXT Report</button>
+                    <button class="btn btn-primary" onclick="downloadReportExcel()">📥 Download Excel Report</button>
+                    <button class="btn btn-primary" onclick="downloadReportPDF()">📄 Download PDF Report</button>
+                    <button class="btn btn-primary" onclick="resetToStart()">⟲ Start New Analysis</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
